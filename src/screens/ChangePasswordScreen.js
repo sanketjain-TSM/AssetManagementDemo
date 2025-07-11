@@ -1,5 +1,5 @@
-import { useNavigation } from "@react-navigation/native";
-import React, { useState } from "react";
+import {useNavigation} from '@react-navigation/native';
+import React, {useState} from 'react';
 import {
   View,
   Text,
@@ -13,21 +13,21 @@ import {
   Dimensions,
   ScrollView,
   ActivityIndicator,
-} from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import axios from "axios";
+} from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
 
-const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
-const widthPercentageToDP = (widthPercent) =>
+const {width: screenWidth, height: screenHeight} = Dimensions.get('window');
+const widthPercentageToDP = widthPercent =>
   (screenWidth * parseFloat(widthPercent)) / 100;
-const heightPercentageToDP = (heightPercent) =>
+const heightPercentageToDP = heightPercent =>
   (screenHeight * parseFloat(heightPercent)) / 100;
 const isTablet = () => screenWidth >= 768 && screenHeight / screenWidth < 1.6;
 const tablet = isTablet();
 
 const ChangePasswordScreen = () => {
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const navigation = useNavigation();
 
@@ -37,31 +37,31 @@ const ChangePasswordScreen = () => {
     try {
       // Validate that both password fields are filled in
       if (!newPassword || !confirmPassword) {
-        Alert.alert("Error", "Please fill in all fields.");
+        Alert.alert('Error', 'Please fill in all fields.');
         return;
       }
 
       if (newPassword !== confirmPassword) {
-        Alert.alert("Error", "Passwords do not match.");
+        Alert.alert('Error', 'Passwords do not match.');
         return;
       }
 
-      const token = await AsyncStorage.getItem("token");
+      const token = await AsyncStorage.getItem('token');
 
       const response = await axios.post(
-        "http://35.223.244.137:8000/v1/user/changePassword",
-        { newPassword: newPassword },
-        { headers: { Authorization: `Bearer ${token}` } }
+        'http://34.57.92.8:8000/v1/user/changePassword',
+        {newPassword: newPassword},
+        {headers: {Authorization: `Bearer ${token}`}},
       );
 
-      Alert.alert("Success", "Password changed successfully.", [
+      Alert.alert('Success', 'Password changed successfully.', [
         {
-          text: "OK",
+          text: 'OK',
           onPress: () => navigation.goBack(), // Navigate back on success
         },
       ]);
     } catch (error) {
-      Alert.alert("Error", "There was an issue changing your password.");
+      Alert.alert('Error', 'There was an issue changing your password.');
     } finally {
       setLoading(false);
     }
@@ -73,7 +73,7 @@ const ChangePasswordScreen = () => {
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
             <Image
-              source={require("../../assets/images/backArrow.png")}
+              source={require('../../assets/images/backArrow.png')}
               style={styles.backArrow}
             />
           </TouchableOpacity>
@@ -101,8 +101,7 @@ const ChangePasswordScreen = () => {
           <TouchableOpacity
             style={styles.button}
             onPress={handleChangePassword}
-            disabled={loading}
-          >
+            disabled={loading}>
             {loading ? (
               <ActivityIndicator size="small" color="#FFF" />
             ) : (
@@ -118,23 +117,23 @@ const ChangePasswordScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFF",
+    backgroundColor: '#FFF',
   },
   scrollContainer: {
-    paddingTop: Platform.OS === "ios" ? 40 : 20,
+    paddingTop: Platform.OS === 'ios' ? 40 : 20,
     paddingHorizontal: tablet ? widthPercentageToDP(5) : 20,
     flexGrow: 1,
   },
   header: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: tablet ? heightPercentageToDP(4) : 20,
   },
   headerText: {
     fontSize: tablet ? 26 : 20,
-    fontWeight: "600",
+    fontWeight: '600',
     flex: 1,
-    textAlign: "left",
+    textAlign: 'left',
     marginLeft: 10,
   },
   backArrow: {
@@ -143,43 +142,43 @@ const styles = StyleSheet.create({
     marginRight: tablet ? 15 : 10,
   },
   formContainer: {
-    width: "100%",
+    width: '100%',
     marginTop: tablet ? heightPercentageToDP(2) : 20,
   },
   label: {
     fontSize: tablet ? 18 : 16,
-    color: "#0E0E0E",
+    color: '#0E0E0E',
     marginTop: 15,
     marginBottom: 8,
-    fontWeight: "400",
+    fontWeight: '400',
   },
   input: {
     height: tablet ? 60 : 50,
     fontSize: tablet ? 17 : 15,
-    backgroundColor: "#F9F9F9",
+    backgroundColor: '#F9F9F9',
     paddingHorizontal: 12,
     borderRadius: 5,
-    fontWeight: "400",
-    color: "#0E0E0E",
+    fontWeight: '400',
+    color: '#0E0E0E',
     borderWidth: 1,
-    borderColor: "#D9D9D9",
+    borderColor: '#D9D9D9',
     marginBottom: tablet ? 25 : 20,
   },
   button: {
     marginTop: tablet ? heightPercentageToDP(4) : 40,
-    backgroundColor: "#EF652B",
+    backgroundColor: '#EF652B',
     paddingVertical: tablet ? 18 : 15,
     borderRadius: 8,
-    justifyContent: "center",
-    alignItems: "center",
-    alignSelf: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
+    alignSelf: 'center',
     width: tablet ? widthPercentageToDP(90) : widthPercentageToDP(90),
     marginBottom: tablet ? heightPercentageToDP(4) : 40,
   },
   buttonText: {
-    color: "#FFF",
+    color: '#FFF',
     fontSize: tablet ? 20 : 18,
-    fontWeight: "400",
+    fontWeight: '400',
   },
 });
 

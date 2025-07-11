@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, {useState, useRef, useEffect} from 'react';
 import {
   View,
   Text,
@@ -13,52 +13,52 @@ import {
   Alert,
   Platform,
   Dimensions,
-} from "react-native";
-import axios from "axios";
-import { useFilter } from "../context/FilterContext";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import ImagesEnum from "../shared/ImagesEnum";
-import { useNavigation } from "@react-navigation/native";
+} from 'react-native';
+import axios from 'axios';
+import {useFilter} from '../context/FilterContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import ImagesEnum from '../shared/ImagesEnum';
+import {useNavigation} from '@react-navigation/native';
 
-const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
+const {width: screenWidth, height: screenHeight} = Dimensions.get('window');
 const isTablet = screenWidth >= 768;
 
 export default function AssetsScreen() {
   const [assets, setAssets] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSearchVisible, setIsSearchVisible] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState('');
 
   const searchBarWidth = useRef(new Animated.Value(0)).current;
-  const { showFilter } = useFilter();
+  const {showFilter} = useFilter();
   const navigation = useNavigation();
 
   useEffect(() => {
     fetchAssets();
   }, []);
 
-  const handleSearch = (text) => {
+  const handleSearch = text => {
     setSearchTerm(text);
   };
 
   const fetchAssets = async () => {
     try {
-      const token = await AsyncStorage.getItem("token");
+      const token = await AsyncStorage.getItem('token');
       const response = await axios.post(
-        "http://35.223.244.137:8000/v1/assets/assetsList",
-        { location: "", description: "" },
-        { headers: { Authorization: `Bearer ${token}` } }
+        'http://34.57.92.8:8000/v1/assets/assetsList',
+        {location: '', description: ''},
+        {headers: {Authorization: `Bearer ${token}`}},
       );
       setAssets(response.data);
     } catch (error) {
-      Alert.alert("Error", "Failed to load assets.");
+      Alert.alert('Error', 'Failed to load assets.');
     } finally {
       setIsLoading(false);
     }
   };
 
   const toggleSearchBar = () => {
-    setSearchTerm("");
+    setSearchTerm('');
     if (isSearchVisible) {
       Animated.timing(searchBarWidth, {
         toValue: 0,
@@ -75,11 +75,10 @@ export default function AssetsScreen() {
     }
   };
 
-  const renderItem = ({ item }) => (
+  const renderItem = ({item}) => (
     <TouchableOpacity
       style={styles.assetItem}
-      onPress={() => navigation.navigate("AssetDetails", { asset: item })}
-    >
+      onPress={() => navigation.navigate('AssetDetails', {asset: item})}>
       <Image
         source={ImagesEnum?.[item.description]}
         style={styles.assetImage}
@@ -103,7 +102,7 @@ export default function AssetsScreen() {
 
   const searchBarInterpolation = searchBarWidth.interpolate({
     inputRange: [0, 1],
-    outputRange: ["0%", isTablet ? "85%" : "75%"],
+    outputRange: ['0%', isTablet ? '85%' : '75%'],
   });
 
   if (isLoading) {
@@ -115,8 +114,8 @@ export default function AssetsScreen() {
   }
 
   const filteredAssets = searchTerm
-    ? assets?.filter((asset) =>
-        asset?.description?.toLowerCase()?.includes(searchTerm?.toLowerCase())
+    ? assets?.filter(asset =>
+        asset?.description?.toLowerCase()?.includes(searchTerm?.toLowerCase()),
       )
     : assets;
 
@@ -128,11 +127,10 @@ export default function AssetsScreen() {
             <Animated.View
               style={[
                 styles.searchBarContainer,
-                { width: searchBarInterpolation },
-              ]}
-            >
+                {width: searchBarInterpolation},
+              ]}>
               <Image
-                source={require("../../assets/images/search-normal.png")}
+                source={require('../../assets/images/search-normal.png')}
                 style={styles.searchNormalIcon}
               />
               <TextInput
@@ -151,12 +149,12 @@ export default function AssetsScreen() {
             <TouchableOpacity onPress={toggleSearchBar}>
               {isSearchVisible ? (
                 <Image
-                  source={require("../../assets/images/crossIcon.png")}
+                  source={require('../../assets/images/crossIcon.png')}
                   style={styles.searchicon}
                 />
               ) : (
                 <Image
-                  source={require("../../assets/images/searchIcon.png")}
+                  source={require('../../assets/images/searchIcon.png')}
                   style={styles.searchicon}
                 />
               )}
@@ -181,30 +179,30 @@ const paddingSize = isTablet ? 24 : 16;
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: '#FFFFFF',
   },
   container: {
     flex: 1,
-    backgroundColor: "#F9F9F9",
+    backgroundColor: '#F9F9F9',
   },
   headerContainer: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: '#FFFFFF',
     paddingVertical: paddingSize,
     paddingHorizontal: paddingSize,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   header: {
     fontSize: isTablet ? 28 : 24,
-    fontWeight: "600",
-    color: "#0E0E0E",
+    fontWeight: '600',
+    color: '#0E0E0E',
     flex: 1,
     paddingLeft: 10,
   },
   iconContainer: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   searchicon: {
     marginLeft: isTablet ? 30 : 20,
@@ -212,29 +210,29 @@ const styles = StyleSheet.create({
     height: isTablet ? 48 : 40,
   },
   searchBarContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#F9F9F9",
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F9F9F9',
     borderRadius: 5,
     paddingLeft: 10,
     marginRight: 10,
   },
   searchInput: {
     fontSize: baseFontSize,
-    color: "#000",
+    color: '#000',
     flex: 1,
     height: isTablet ? 50 : 43,
   },
   contentContainer: {
     flex: 1,
-    backgroundColor: "#F9F9F9",
+    backgroundColor: '#F9F9F9',
     padding: paddingSize,
   },
   assetItem: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     padding: paddingSize,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: '#FFFFFF',
     borderRadius: 8,
     marginHorizontal: paddingSize,
     marginBottom: 8,
@@ -249,25 +247,25 @@ const styles = StyleSheet.create({
   },
   assetName: {
     fontSize: baseFontSize,
-    fontWeight: "600",
+    fontWeight: '600',
   },
   assetMonitored: {
     fontSize: baseFontSize - 1,
-    color: "#0E0E0E",
+    color: '#0E0E0E',
     opacity: 0.5,
-    fontWeight: "600",
+    fontWeight: '600',
   },
   assetMonitoredData: {
     fontSize: baseFontSize - 2,
-    fontWeight: "600",
+    fontWeight: '600',
   },
   totalText: {
-    flexDirection: "row",
+    flexDirection: 'row',
     marginTop: 8,
   },
   listContentContainer: {
     paddingBottom: 80,
-    backgroundColor: "#F9F9F9",
+    backgroundColor: '#F9F9F9',
   },
   searchNormalIcon: {
     opacity: 0.5,

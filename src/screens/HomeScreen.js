@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useRef } from "react";
+import React, {useEffect, useState, useCallback, useRef} from 'react';
 import {
   View,
   Text,
@@ -11,27 +11,27 @@ import {
   Platform,
   ActivityIndicator,
   Dimensions,
-} from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import axios from "axios";
-import SearchResultsScreen from "./SearchResultsScreen";
-import bleIcon from "../../assets/images/bluetooth_searching.png";
-import { useNavigation } from "@react-navigation/native";
-import { useDevicesContext } from "../context/DeviceContext";
-import { syncDevicesWithAssets } from "../utils/syncDevicesWithAssets";
-import { Keyboard } from "react-native";
+} from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
+import SearchResultsScreen from './SearchResultsScreen';
+import bleIcon from '../../assets/images/bluetooth_searching.png';
+import {useNavigation} from '@react-navigation/native';
+import {useDevicesContext} from '../context/DeviceContext';
+import {syncDevicesWithAssets} from '../utils/syncDevicesWithAssets';
+import {Keyboard} from 'react-native';
 
-const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
-const widthPercentageToDP = (widthPercent) =>
+const {width: screenWidth, height: screenHeight} = Dimensions.get('window');
+const widthPercentageToDP = widthPercent =>
   (screenWidth * parseFloat(widthPercent)) / 100;
-const heightPercentageToDP = (heightPercent) =>
+const heightPercentageToDP = heightPercent =>
   (screenHeight * parseFloat(heightPercent)) / 100;
 const isTablet = () => screenWidth >= 768 && screenHeight / screenWidth < 1.6;
 const tablet = isTablet();
 
 const HomeScreen = () => {
-  const { devices } = useDevicesContext();
-  const [searchQuery, setSearchQuery] = useState("");
+  const {devices} = useDevicesContext();
+  const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const debounceTimeoutRef = useRef(null);
@@ -40,24 +40,24 @@ const HomeScreen = () => {
   useEffect(() => {
     const fetchSearchData = async () => {
       try {
-        const userId = await AsyncStorage.getItem("savedEmail");
+        const userId = await AsyncStorage.getItem('savedEmail');
         const storedQuery = await AsyncStorage.getItem(`searchQuery-${userId}`);
         if (storedQuery) {
           setSearchQuery(storedQuery);
           const storedResults = await AsyncStorage.getItem(
-            `searchResults-${userId}`
+            `searchResults-${userId}`,
           );
           if (storedResults) setSearchResults(JSON.parse(storedResults));
         }
       } catch (error) {
-        console.error("Failed to retrieve search data:", error);
+        console.error('Failed to retrieve search data:', error);
       }
     };
 
     fetchSearchData();
   }, []);
 
-  const fetchSearchResults = async (query) => {
+  const fetchSearchResults = async query => {
     if (!query.trim()) {
       setSearchResults([]);
       setLoading(false);
@@ -65,21 +65,21 @@ const HomeScreen = () => {
     }
     try {
       setLoading(true);
-      const token = await AsyncStorage.getItem("token");
-      const userId = await AsyncStorage.getItem("savedEmail");
+      const token = await AsyncStorage.getItem('token');
+      const userId = await AsyncStorage.getItem('savedEmail');
       const response = await axios.post(
-        `http://35.223.244.137:8000/v1/assets/search`,
-        { searchQuery: query },
-        { headers: { Authorization: `Bearer ${token}` } }
+        `http://34.57.92.8:8000/v1/assets/search`,
+        {searchQuery: query},
+        {headers: {Authorization: `Bearer ${token}`}},
       );
       await AsyncStorage.setItem(`searchQuery-${userId}`, query);
       await AsyncStorage.setItem(
         `searchResults-${userId}`,
-        JSON.stringify(response.data)
+        JSON.stringify(response.data),
       );
     } catch (error) {
-      console.error("Failed to fetch search results:", error);
-      Alert.alert("Error", "Failed to fetch search results.");
+      console.error('Failed to fetch search results:', error);
+      Alert.alert('Error', 'Failed to fetch search results.');
     } finally {
       setLoading(false);
     }
@@ -88,8 +88,8 @@ const HomeScreen = () => {
   useEffect(() => {
     if (devices.length === 0) return;
     const deviceMap = syncDevicesWithAssets(devices);
-    setSearchResults((prevAssetsList) =>
-      prevAssetsList?.map((asset) => {
+    setSearchResults(prevAssetsList =>
+      prevAssetsList?.map(asset => {
         if (deviceMap.has(asset.deviceId)) {
           return {
             ...asset,
@@ -97,11 +97,11 @@ const HomeScreen = () => {
           };
         }
         return asset;
-      })
+      }),
     );
   }, [JSON.stringify(devices)]);
 
-  const debouncedSearch = useCallback((query) => {
+  const debouncedSearch = useCallback(query => {
     if (debounceTimeoutRef.current) {
       clearTimeout(debounceTimeoutRef.current);
     }
@@ -109,7 +109,6 @@ const HomeScreen = () => {
       fetchSearchResults(query);
     }, 500);
   }, []);
-
 
   useEffect(() => {
     if (searchQuery.trim()) {
@@ -127,13 +126,13 @@ const HomeScreen = () => {
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: "#fff",
-      paddingTop: Platform.OS === "ios" ? 40 : 0,
+      backgroundColor: '#fff',
+      paddingTop: Platform.OS === 'ios' ? 40 : 0,
     },
     header: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "space-between",
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
       paddingVertical: tablet ? heightPercentageToDP(2) : 15,
       paddingHorizontal: tablet ? widthPercentageToDP(2) : 15,
     },
@@ -147,9 +146,9 @@ const HomeScreen = () => {
       paddingHorizontal: tablet ? widthPercentageToDP(2) : 15,
     },
     searchBar: {
-      flexDirection: "row",
-      alignItems: "center",
-      backgroundColor: "#F9F9F9",
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: '#F9F9F9',
       borderRadius: 5,
       paddingHorizontal: 10,
       height: tablet ? 60 : 48,
@@ -164,9 +163,9 @@ const HomeScreen = () => {
     },
     content: {
       flex: 1,
-      justifyContent: "center",
-      alignItems: "center",
-      backgroundColor: "#F9F9F9",
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: '#F9F9F9',
     },
     foldericon: {
       width: tablet ? 130 : 103,
@@ -175,25 +174,25 @@ const HomeScreen = () => {
     },
     instruction: {
       fontSize: tablet ? 16 : 13,
-      textAlign: "center",
-      color: "#000000",
+      textAlign: 'center',
+      color: '#000000',
       paddingHorizontal: 30,
       opacity: 0.7,
     },
     loaderContainer: {
       flex: 1,
-      justifyContent: "center",
-      alignItems: "center",
+      justifyContent: 'center',
+      alignItems: 'center',
     },
     bleButtonContainer: {
       height: 60,
     },
     bleButton: {
       marginTop: 30,
-      alignSelf: "flex-end",
+      alignSelf: 'flex-end',
       width: 30,
       height: 30,
-      tintColor: "#EF652B",
+      tintColor: '#EF652B',
     },
   });
 
@@ -201,14 +200,13 @@ const HomeScreen = () => {
     <View style={styles.container}>
       <View style={styles.header}>
         <Image
-          source={require("../../assets/images/chorus.png")}
+          source={require('../../assets/images/chorus.png')}
           style={styles.logo}
         />
-         {Platform.OS === "ios" && (
+        {Platform.OS === 'ios' && (
           <TouchableOpacity
             style={styles.bleButtonContainer}
-            onPress={() => navigation.navigate("BleScanner")}
-          >
+            onPress={() => navigation.navigate('BleScanner')}>
             <Image source={bleIcon} style={styles.bleButton} />
           </TouchableOpacity>
         )}
@@ -216,7 +214,7 @@ const HomeScreen = () => {
       <View style={styles.searchBarContainer}>
         <View style={styles.searchBar}>
           <Image
-            source={require("../../assets/images/search_bar.png")}
+            source={require('../../assets/images/search_bar.png')}
             style={styles.filterIcon}
           />
           <TextInput
@@ -228,12 +226,11 @@ const HomeScreen = () => {
           />
           <TouchableOpacity
             onPress={() => {
-              setSearchQuery("");
+              setSearchQuery('');
               Keyboard.dismiss();
             }}
-            style={styles.closeIcon}
-          >
-            <Image source={require("../../assets/images/crossIcon.png")} />
+            style={styles.closeIcon}>
+            <Image source={require('../../assets/images/crossIcon.png')} />
           </TouchableOpacity>
         </View>
       </View>
@@ -246,7 +243,7 @@ const HomeScreen = () => {
       ) : (
         <View style={styles.content}>
           <Image
-            source={require("../../assets/images/folder.png")}
+            source={require('../../assets/images/folder.png')}
             style={styles.foldericon}
           />
           <Text style={styles.instruction}>

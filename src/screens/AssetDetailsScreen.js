@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, {useState, useEffect} from 'react';
 import {
   View,
   Text,
@@ -10,30 +10,30 @@ import {
   ActivityIndicator,
   Platform,
   TouchableNativeFeedback,
-} from "react-native";
-import Collapsible from "react-native-collapsible";
-import axios from "axios";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import Icon from "react-native-vector-icons/Ionicons";
-import { useNavigation } from "@react-navigation/native";
-import ImagesEnum from "../shared/ImagesEnum";
-import { formatDateTime } from "../utils/formatDateTime";
-import { SignalStrengthMeter } from "../components/SignalStrengthMeter";
-import { useDevicesContext } from "../context/DeviceContext";
-import GroundTruth from "../components/GroundTruth";
-import { syncDevicesWithAssets } from "../utils/syncDevicesWithAssets";
-import { SixBarIndicatorSignalmeter } from "../components/SixBarIndicatorSignalmeter";
-import { Dimensions } from "react-native";
+} from 'react-native';
+import Collapsible from 'react-native-collapsible';
+import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import Icon from 'react-native-vector-icons/Ionicons';
+import {useNavigation} from '@react-navigation/native';
+import ImagesEnum from '../shared/ImagesEnum';
+import {formatDateTime} from '../utils/formatDateTime';
+import {SignalStrengthMeter} from '../components/SignalStrengthMeter';
+import {useDevicesContext} from '../context/DeviceContext';
+import GroundTruth from '../components/GroundTruth';
+import {syncDevicesWithAssets} from '../utils/syncDevicesWithAssets';
+import {SixBarIndicatorSignalmeter} from '../components/SixBarIndicatorSignalmeter';
+import {Dimensions} from 'react-native';
 
-const { width: screenWidth } = Dimensions.get("window");
+const {width: screenWidth} = Dimensions.get('window');
 const isTablet = screenWidth >= 768;
-const scaleSize = (size) => (isTablet ? size * 1.3 : size);
+const scaleSize = size => (isTablet ? size * 1.3 : size);
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F5F6FA",
-    paddingTop: Platform.OS === "ios" ? 0 : 0,
+    backgroundColor: '#F5F6FA',
+    paddingTop: Platform.OS === 'ios' ? 0 : 0,
   },
   listContainer: {
     padding: scaleSize(16),
@@ -42,51 +42,51 @@ const styles = StyleSheet.create({
   headerContainer: {
     padding: scaleSize(10),
     marginBottom: scaleSize(10),
-    alignItems: "center",
+    alignItems: 'center',
     paddingVertical: scaleSize(70),
-    backgroundColor: "#FFFFFF",
+    backgroundColor: '#FFFFFF',
     zIndex: 1,
   },
   backArrorwContainer: {
-    width: "100%",
+    width: '100%',
     paddingLeft: scaleSize(10),
   },
   backArrow: {
     width: isTablet ? 60 : 44,
     height: isTablet ? 60 : 44,
-    resizeMode: "contain",
+    resizeMode: 'contain',
   },
   assetImage: {
     width: isTablet ? 100 : 60,
     height: isTablet ? 100 : 60,
     marginTop: scaleSize(10),
-    alignSelf: "center",
+    alignSelf: 'center',
     marginBottom: scaleSize(16),
   },
   assetName: {
     fontSize: scaleSize(22),
-    color: "#242424",
-    fontFamily: "Roboto",
-    fontWeight: "700",
+    color: '#242424',
+    fontFamily: 'Roboto',
+    fontWeight: '700',
     marginTop: scaleSize(10),
   },
   assetContainer: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: '#FFFFFF',
     borderRadius: 5,
     marginBottom: scaleSize(10),
     padding: scaleSize(16),
   },
   assetDetailsContainer: {
-    justifyContent: "space-between",
+    justifyContent: 'space-between',
     marginBottom: 5,
-    backgroundColor: "#F9F9F9",
+    backgroundColor: '#F9F9F9',
     paddingTop: 5,
   },
   assetDetailValue: {
-    color: "#0E0E0E",
+    color: '#0E0E0E',
     fontSize: scaleSize(14),
-    fontWeight: "600",
-    fontFamily: "Roboto",
+    fontWeight: '600',
+    fontFamily: 'Roboto',
     marginLeft: scaleSize(10),
     marginTop: scaleSize(4),
   },
@@ -95,9 +95,9 @@ const styles = StyleSheet.create({
     paddingBottom: 5,
   },
   assetInfo: {
-    flexDirection: "row",
-    alignItems: "center",
-    width: "100%",
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: '100%',
     paddingLeft: scaleSize(10),
     paddingRight: scaleSize(10),
     marginBottom: scaleSize(5),
@@ -110,66 +110,66 @@ const styles = StyleSheet.create({
   },
   infoValue: {
     fontSize: scaleSize(14),
-    color: "#0E0E0E",
-    fontWeight: "600",
+    color: '#0E0E0E',
+    fontWeight: '600',
     marginVertical: scaleSize(3),
     marginLeft: scaleSize(10),
     width: isTablet ? 180 : 130,
   },
   modelRow: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: '#FFFFFF',
     height: scaleSize(35),
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 3,
     marginTop: 0,
   },
   modelLabel: {
     fontSize: scaleSize(14),
-    fontFamily: "Roboto",
-    fontWeight: "500",
-    color: "#0E0E0E",
+    fontFamily: 'Roboto',
+    fontWeight: '500',
+    color: '#0E0E0E',
     opacity: 0.5,
   },
   modelValue: {
     fontSize: scaleSize(14),
-    fontFamily: "Roboto",
-    fontWeight: "500",
-    color: "#0E0E0E",
+    fontFamily: 'Roboto',
+    fontWeight: '500',
+    color: '#0E0E0E',
   },
   lastKnownLocation: {
-    backgroundColor: "#F2F9FF",
+    backgroundColor: '#F2F9FF',
     padding: scaleSize(10),
     height: scaleSize(175),
-    justifyContent: "center",
+    justifyContent: 'center',
     borderRadius: 5,
-    width: "100%",
+    width: '100%',
     gap: scaleSize(8),
   },
   locationTitle: {
     fontSize: scaleSize(12),
-    fontFamily: "Roboto",
-    fontWeight: "600",
-    color: "#202239",
+    fontFamily: 'Roboto',
+    fontWeight: '600',
+    color: '#202239',
     opacity: 0.5,
   },
   locationText: {
     fontSize: scaleSize(14),
-    fontFamily: "Roboto",
-    color: "#202239",
+    fontFamily: 'Roboto',
+    color: '#202239',
   },
   locationContainer: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingTop: scaleSize(1.5),
   },
   locationInfo: {
-    flexDirection: "row",
+    flexDirection: 'row',
     gap: scaleSize(20),
   },
   dateTimeContainer: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: scaleSize(2),
   },
   icon: {
@@ -179,12 +179,12 @@ const styles = StyleSheet.create({
   },
   locationRow: {
     fontSize: scaleSize(14),
-    color: "#202239",
-    fontWeight: "400",
+    color: '#202239',
+    fontWeight: '400',
   },
   rssiContainer: {
-    width: "50%",
-    justifyContent: "center",
+    width: '50%',
+    justifyContent: 'center',
   },
   arrowIcon: {
     width: scaleSize(9),
@@ -194,9 +194,9 @@ const styles = StyleSheet.create({
   },
 });
 
-const AssetDetailsScreen = ({ route }) => {
-  const { devices } = useDevicesContext();
-  const { asset } = route.params;
+const AssetDetailsScreen = ({route}) => {
+  const {devices} = useDevicesContext();
+  const {asset} = route.params;
   const [collapsedStates, setCollapsedStates] = useState({});
   const [assetsList, setAssetsList] = useState([]);
   const [skip, setSkip] = useState(0);
@@ -214,26 +214,26 @@ const AssetDetailsScreen = ({ route }) => {
 
     setLoading(true);
     try {
-      const token = await AsyncStorage.getItem("token");
+      const token = await AsyncStorage.getItem('token');
       const response = await axios.get(
-        `http://35.223.244.137:8000/v1/assets/description/all?description=${encodeURIComponent(
-          asset?.description
+        `http://34.57.92.8:8000/v1/assets/description/all?description=${encodeURIComponent(
+          asset?.description,
         )}&skip=${skip}&limit=${limit}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
       const newAssets = response.data.assetsDetails;
       if (newAssets.length > 0) {
-        setAssetsList((prevList) => [...prevList, ...newAssets]);
+        setAssetsList(prevList => [...prevList, ...newAssets]);
       }
       setHasMore(newAssets.length >= limit);
-      setSkip((prevSkip) => prevSkip + limit);
+      setSkip(prevSkip => prevSkip + limit);
     } catch (error) {
-      Alert.alert("Error", "Failed to load assets.");
+      Alert.alert('Error', 'Failed to load assets.');
     } finally {
       setLoading(false);
     }
@@ -264,33 +264,33 @@ const AssetDetailsScreen = ({ route }) => {
   // }, [JSON.stringify(devices)]);
 
   function ordinalSuffixOf(i) {
-    if (i?.toLowerCase() === "notinzone") {
+    if (i?.toLowerCase() === 'notinzone') {
       return i;
     }
     i = Number(i);
     let j = i % 10,
       k = i % 100;
     if (j == 1 && k != 11) {
-      return i + "st Floor";
+      return i + 'st Floor';
     }
     if (j == 2 && k != 12) {
-      return i + "nd Floor";
+      return i + 'nd Floor';
     }
     if (j == 3 && k != 13) {
-      return i + "rd Floor";
+      return i + 'rd Floor';
     }
-    return i + "th Floor";
+    return i + 'th Floor';
   }
 
-  const toggleCollapse = (index) => {
-    setCollapsedStates((prevState) => ({
+  const toggleCollapse = index => {
+    setCollapsedStates(prevState => ({
       ...prevState,
       [index]: !prevState[index],
     }));
   };
 
-  const renderAssetItem = ({ item, index }) => {
-    const { formattedDate, formattedTime } = formatDateTime(item.lastSeenTime);
+  const renderAssetItem = ({item, index}) => {
+    const {formattedDate, formattedTime} = formatDateTime(item.lastSeenTime);
 
     return (
       <View key={index} style={styles.assetContainer}>
@@ -301,12 +301,12 @@ const AssetDetailsScreen = ({ route }) => {
               <Text></Text>
               <Text style={styles.assetDetailValue}>: {item.tagNumber}</Text>
               <Image
-                source={require("../../assets/images/downarrow.png")}
+                source={require('../../assets/images/downarrow.png')}
                 style={[
                   styles.arrowIcon,
                   {
                     transform: [
-                      { rotate: collapsedStates[index] ? "180deg" : "0deg" },
+                      {rotate: collapsedStates[index] ? '180deg' : '0deg'},
                     ],
                   },
                 ]}
@@ -330,8 +330,7 @@ const AssetDetailsScreen = ({ route }) => {
                 <Text
                   ellipsizeMode="tail"
                   numberOfLines={1}
-                  style={styles.infoValue}
-                >
+                  style={styles.infoValue}>
                   : {item.manufacturer}
                 </Text>
               </View>
@@ -346,13 +345,13 @@ const AssetDetailsScreen = ({ route }) => {
           <Text style={styles.locationTitle}>LAST KNOWN LOCATION</Text>
           <View style={styles.locationContainer}>
             <Image
-              source={require("../../assets/images/location.png")}
+              source={require('../../assets/images/location.png')}
               style={styles.icon}
             />
             <Text style={styles.locationText}>
               {ordinalSuffixOf(item?.floor)}
-              {item?.department?.toLowerCase() == "unknown"
-                ? ""
+              {item?.department?.toLowerCase() == 'unknown'
+                ? ''
                 : `, ${item?.department}`}
             </Text>
           </View>
@@ -363,14 +362,14 @@ const AssetDetailsScreen = ({ route }) => {
           <View style={styles.locationInfo}>
             <View style={styles.dateTimeContainer}>
               <Image
-                source={require("../../assets/images/calendar.png")}
+                source={require('../../assets/images/calendar.png')}
                 style={styles.icon}
               />
               <Text style={styles.locationRow}>{formattedDate}</Text>
             </View>
             <View style={styles.dateTimeContainer}>
               <Image
-                source={require("../../assets/images/clock.png")}
+                source={require('../../assets/images/clock.png')}
                 style={styles.icon}
               />
               <Text style={styles.locationRow}>{formattedTime}</Text>
@@ -391,7 +390,7 @@ const AssetDetailsScreen = ({ route }) => {
         <View style={styles.backArrorwContainer}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
             <Image
-              source={require("../../assets/images/backArrow.png")}
+              source={require('../../assets/images/backArrow.png')}
               style={styles.backArrow}
             />
           </TouchableOpacity>
