@@ -8,13 +8,13 @@
 
 /* Begin PBXBuildFile section */
 		00E356F31AD99517003FC87E /* ChorusAssetManagementDemoTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 00E356F21AD99517003FC87E /* ChorusAssetManagementDemoTests.m */; };
-		0C80B921A6F3F58F76C31292 /* libPods-ChorusAssetManagementDemo.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 5DCACB8F33CDC322A6C60F78 /* libPods-ChorusAssetManagementDemo.a */; };
 		13B07FBC1A68108700A75B9A /* AppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB01A68108700A75B9A /* AppDelegate.mm */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		13B07FC11A68108700A75B9A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB71A68108700A75B9A /* main.m */; };
 		4108B7BB01B0C5E415BE9FB5 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 1CCD0089E336EED950D1A3C4 /* PrivacyInfo.xcprivacy */; };
-		7699B88040F8A987B510C191 /* libPods-ChorusAssetManagementDemo-ChorusAssetManagementDemoTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 19F6CBCC0A4E27FBF8BF4A61 /* libPods-ChorusAssetManagementDemo-ChorusAssetManagementDemoTests.a */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
+		AF3C72CA45D574B38B87D407 /* libPods-ChorusAssetManagementDemo-ChorusAssetManagementDemoTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F04EA33A237F1DBD44A05E19 /* libPods-ChorusAssetManagementDemo-ChorusAssetManagementDemoTests.a */; };
+		FF0ABD88359EF1913A0F525A /* libPods-ChorusAssetManagementDemo.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A16AE1894AEE57720AA82184 /* libPods-ChorusAssetManagementDemo.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -31,6 +31,7 @@
 		00E356EE1AD99517003FC87E /* ChorusAssetManagementDemoTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ChorusAssetManagementDemoTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		00E356F11AD99517003FC87E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		00E356F21AD99517003FC87E /* ChorusAssetManagementDemoTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ChorusAssetManagementDemoTests.m; sourceTree = "<group>"; };
+		0EA443863608183CCED0AB53 /* Pods-ChorusAssetManagementDemo-ChorusAssetManagementDemoTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ChorusAssetManagementDemo-ChorusAssetManagementDemoTests.debug.xcconfig"; path = "Target Support Files/Pods-ChorusAssetManagementDemo-ChorusAssetManagementDemoTests/Pods-ChorusAssetManagementDemo-ChorusAssetManagementDemoTests.debug.xcconfig"; sourceTree = "<group>"; };
 		13B07F961A680F5B00A75B9A /* ChorusAssetManagementDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ChorusAssetManagementDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FAF1A68108700A75B9A /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AppDelegate.h; path = ChorusAssetManagementDemo/AppDelegate.h; sourceTree = "<group>"; };
 		13B07FB01A68108700A75B9A /* AppDelegate.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = AppDelegate.mm; path = ChorusAssetManagementDemo/AppDelegate.mm; sourceTree = "<group>"; };
@@ -38,15 +39,15 @@
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = ChorusAssetManagementDemo/Info.plist; sourceTree = "<group>"; };
 		13B07FB71A68108700A75B9A /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = main.m; path = ChorusAssetManagementDemo/main.m; sourceTree = "<group>"; };
 		13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = PrivacyInfo.xcprivacy; path = ChorusAssetManagementDemo/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		19F6CBCC0A4E27FBF8BF4A61 /* libPods-ChorusAssetManagementDemo-ChorusAssetManagementDemoTests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-ChorusAssetManagementDemo-ChorusAssetManagementDemoTests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		1CCD0089E336EED950D1A3C4 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = ChorusAssetManagementDemo/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		3B4392A12AC88292D35C810B /* Pods-ChorusAssetManagementDemo.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ChorusAssetManagementDemo.debug.xcconfig"; path = "Target Support Files/Pods-ChorusAssetManagementDemo/Pods-ChorusAssetManagementDemo.debug.xcconfig"; sourceTree = "<group>"; };
-		5709B34CF0A7D63546082F79 /* Pods-ChorusAssetManagementDemo.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ChorusAssetManagementDemo.release.xcconfig"; path = "Target Support Files/Pods-ChorusAssetManagementDemo/Pods-ChorusAssetManagementDemo.release.xcconfig"; sourceTree = "<group>"; };
-		5B7EB9410499542E8C5724F5 /* Pods-ChorusAssetManagementDemo-ChorusAssetManagementDemoTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ChorusAssetManagementDemo-ChorusAssetManagementDemoTests.debug.xcconfig"; path = "Target Support Files/Pods-ChorusAssetManagementDemo-ChorusAssetManagementDemoTests/Pods-ChorusAssetManagementDemo-ChorusAssetManagementDemoTests.debug.xcconfig"; sourceTree = "<group>"; };
-		5DCACB8F33CDC322A6C60F78 /* libPods-ChorusAssetManagementDemo.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-ChorusAssetManagementDemo.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		453549E52E250C7200C5291C /* ChorusAssetManagementDemo.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = ChorusAssetManagementDemo.entitlements; path = ChorusAssetManagementDemo/ChorusAssetManagementDemo.entitlements; sourceTree = "<group>"; };
+		48F510C5BA4279B7A23A9B9E /* Pods-ChorusAssetManagementDemo.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ChorusAssetManagementDemo.release.xcconfig"; path = "Target Support Files/Pods-ChorusAssetManagementDemo/Pods-ChorusAssetManagementDemo.release.xcconfig"; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = ChorusAssetManagementDemo/LaunchScreen.storyboard; sourceTree = "<group>"; };
-		89C6BE57DB24E9ADA2F236DE /* Pods-ChorusAssetManagementDemo-ChorusAssetManagementDemoTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ChorusAssetManagementDemo-ChorusAssetManagementDemoTests.release.xcconfig"; path = "Target Support Files/Pods-ChorusAssetManagementDemo-ChorusAssetManagementDemoTests/Pods-ChorusAssetManagementDemo-ChorusAssetManagementDemoTests.release.xcconfig"; sourceTree = "<group>"; };
+		A16AE1894AEE57720AA82184 /* libPods-ChorusAssetManagementDemo.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-ChorusAssetManagementDemo.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		BD21B35669C6F39C85990F5B /* Pods-ChorusAssetManagementDemo-ChorusAssetManagementDemoTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ChorusAssetManagementDemo-ChorusAssetManagementDemoTests.release.xcconfig"; path = "Target Support Files/Pods-ChorusAssetManagementDemo-ChorusAssetManagementDemoTests/Pods-ChorusAssetManagementDemo-ChorusAssetManagementDemoTests.release.xcconfig"; sourceTree = "<group>"; };
+		C8B871C33FF4F65D3512D7CC /* Pods-ChorusAssetManagementDemo.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ChorusAssetManagementDemo.debug.xcconfig"; path = "Target Support Files/Pods-ChorusAssetManagementDemo/Pods-ChorusAssetManagementDemo.debug.xcconfig"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
+		F04EA33A237F1DBD44A05E19 /* libPods-ChorusAssetManagementDemo-ChorusAssetManagementDemoTests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-ChorusAssetManagementDemo-ChorusAssetManagementDemoTests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -54,7 +55,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				7699B88040F8A987B510C191 /* libPods-ChorusAssetManagementDemo-ChorusAssetManagementDemoTests.a in Frameworks */,
+				AF3C72CA45D574B38B87D407 /* libPods-ChorusAssetManagementDemo-ChorusAssetManagementDemoTests.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -62,7 +63,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0C80B921A6F3F58F76C31292 /* libPods-ChorusAssetManagementDemo.a in Frameworks */,
+				FF0ABD88359EF1913A0F525A /* libPods-ChorusAssetManagementDemo.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -89,6 +90,7 @@
 		13B07FAE1A68108700A75B9A /* ChorusAssetManagementDemo */ = {
 			isa = PBXGroup;
 			children = (
+				453549E52E250C7200C5291C /* ChorusAssetManagementDemo.entitlements */,
 				13B07FAF1A68108700A75B9A /* AppDelegate.h */,
 				13B07FB01A68108700A75B9A /* AppDelegate.mm */,
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
@@ -105,8 +107,8 @@
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				5DCACB8F33CDC322A6C60F78 /* libPods-ChorusAssetManagementDemo.a */,
-				19F6CBCC0A4E27FBF8BF4A61 /* libPods-ChorusAssetManagementDemo-ChorusAssetManagementDemoTests.a */,
+				A16AE1894AEE57720AA82184 /* libPods-ChorusAssetManagementDemo.a */,
+				F04EA33A237F1DBD44A05E19 /* libPods-ChorusAssetManagementDemo-ChorusAssetManagementDemoTests.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -145,10 +147,10 @@
 		BBD78D7AC51CEA395F1C20DB /* Pods */ = {
 			isa = PBXGroup;
 			children = (
-				3B4392A12AC88292D35C810B /* Pods-ChorusAssetManagementDemo.debug.xcconfig */,
-				5709B34CF0A7D63546082F79 /* Pods-ChorusAssetManagementDemo.release.xcconfig */,
-				5B7EB9410499542E8C5724F5 /* Pods-ChorusAssetManagementDemo-ChorusAssetManagementDemoTests.debug.xcconfig */,
-				89C6BE57DB24E9ADA2F236DE /* Pods-ChorusAssetManagementDemo-ChorusAssetManagementDemoTests.release.xcconfig */,
+				C8B871C33FF4F65D3512D7CC /* Pods-ChorusAssetManagementDemo.debug.xcconfig */,
+				48F510C5BA4279B7A23A9B9E /* Pods-ChorusAssetManagementDemo.release.xcconfig */,
+				0EA443863608183CCED0AB53 /* Pods-ChorusAssetManagementDemo-ChorusAssetManagementDemoTests.debug.xcconfig */,
+				BD21B35669C6F39C85990F5B /* Pods-ChorusAssetManagementDemo-ChorusAssetManagementDemoTests.release.xcconfig */,
 			);
 			path = Pods;
 			sourceTree = "<group>";
@@ -160,12 +162,12 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 00E357021AD99517003FC87E /* Build configuration list for PBXNativeTarget "ChorusAssetManagementDemoTests" */;
 			buildPhases = (
-				A55EABD7B0C7F3A422A6CC61 /* [CP] Check Pods Manifest.lock */,
+				715987258DD6F996ABDC78CA /* [CP] Check Pods Manifest.lock */,
 				00E356EA1AD99517003FC87E /* Sources */,
 				00E356EB1AD99517003FC87E /* Frameworks */,
 				00E356EC1AD99517003FC87E /* Resources */,
-				C59DA0FBD6956966B86A3779 /* [CP] Embed Pods Frameworks */,
-				F6A41C54EA430FDDC6A6ED99 /* [CP] Copy Pods Resources */,
+				9B85757FAE9AB84D7B48D4F6 /* [CP] Embed Pods Frameworks */,
+				3DE71B976735ED447722C373 /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -181,13 +183,13 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "ChorusAssetManagementDemo" */;
 			buildPhases = (
-				C38B50BA6285516D6DCD4F65 /* [CP] Check Pods Manifest.lock */,
+				41297B92012738C8ED167BC4 /* [CP] Check Pods Manifest.lock */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
-				00EEFC60759A1932668264C0 /* [CP] Embed Pods Frameworks */,
-				E235C05ADACE081382539298 /* [CP] Copy Pods Resources */,
+				C50CDB207F4265F6C9D2FB70 /* [CP] Embed Pods Frameworks */,
+				B85DBE21A0E045CCE4415F2A /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -271,46 +273,24 @@
 			shellPath = /bin/sh;
 			shellScript = "set -e\n\nWITH_ENVIRONMENT=\"$REACT_NATIVE_PATH/scripts/xcode/with-environment.sh\"\nREACT_NATIVE_XCODE=\"$REACT_NATIVE_PATH/scripts/react-native-xcode.sh\"\n\n/bin/sh -c \"$WITH_ENVIRONMENT $REACT_NATIVE_XCODE\"\n";
 		};
-		00EEFC60759A1932668264C0 /* [CP] Embed Pods Frameworks */ = {
+		3DE71B976735ED447722C373 /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-ChorusAssetManagementDemo/Pods-ChorusAssetManagementDemo-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+				"${PODS_ROOT}/Target Support Files/Pods-ChorusAssetManagementDemo-ChorusAssetManagementDemoTests/Pods-ChorusAssetManagementDemo-ChorusAssetManagementDemoTests-resources-${CONFIGURATION}-input-files.xcfilelist",
 			);
-			name = "[CP] Embed Pods Frameworks";
+			name = "[CP] Copy Pods Resources";
 			outputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-ChorusAssetManagementDemo/Pods-ChorusAssetManagementDemo-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+				"${PODS_ROOT}/Target Support Files/Pods-ChorusAssetManagementDemo-ChorusAssetManagementDemoTests/Pods-ChorusAssetManagementDemo-ChorusAssetManagementDemoTests-resources-${CONFIGURATION}-output-files.xcfilelist",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-ChorusAssetManagementDemo/Pods-ChorusAssetManagementDemo-frameworks.sh\"\n";
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-ChorusAssetManagementDemo-ChorusAssetManagementDemoTests/Pods-ChorusAssetManagementDemo-ChorusAssetManagementDemoTests-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		A55EABD7B0C7F3A422A6CC61 /* [CP] Check Pods Manifest.lock */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
-				"${PODS_ROOT}/Manifest.lock",
-			);
-			name = "[CP] Check Pods Manifest.lock";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-ChorusAssetManagementDemo-ChorusAssetManagementDemoTests-checkManifestLockResult.txt",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
-			showEnvVarsInLog = 0;
-		};
-		C38B50BA6285516D6DCD4F65 /* [CP] Check Pods Manifest.lock */ = {
+		41297B92012738C8ED167BC4 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -332,7 +312,29 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		C59DA0FBD6956966B86A3779 /* [CP] Embed Pods Frameworks */ = {
+		715987258DD6F996ABDC78CA /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-ChorusAssetManagementDemo-ChorusAssetManagementDemoTests-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+		9B85757FAE9AB84D7B48D4F6 /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -349,7 +351,7 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-ChorusAssetManagementDemo-ChorusAssetManagementDemoTests/Pods-ChorusAssetManagementDemo-ChorusAssetManagementDemoTests-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		E235C05ADACE081382539298 /* [CP] Copy Pods Resources */ = {
+		B85DBE21A0E045CCE4415F2A /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -366,21 +368,21 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-ChorusAssetManagementDemo/Pods-ChorusAssetManagementDemo-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		F6A41C54EA430FDDC6A6ED99 /* [CP] Copy Pods Resources */ = {
+		C50CDB207F4265F6C9D2FB70 /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-ChorusAssetManagementDemo-ChorusAssetManagementDemoTests/Pods-ChorusAssetManagementDemo-ChorusAssetManagementDemoTests-resources-${CONFIGURATION}-input-files.xcfilelist",
+				"${PODS_ROOT}/Target Support Files/Pods-ChorusAssetManagementDemo/Pods-ChorusAssetManagementDemo-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
-			name = "[CP] Copy Pods Resources";
+			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-ChorusAssetManagementDemo-ChorusAssetManagementDemoTests/Pods-ChorusAssetManagementDemo-ChorusAssetManagementDemoTests-resources-${CONFIGURATION}-output-files.xcfilelist",
+				"${PODS_ROOT}/Target Support Files/Pods-ChorusAssetManagementDemo/Pods-ChorusAssetManagementDemo-frameworks-${CONFIGURATION}-output-files.xcfilelist",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-ChorusAssetManagementDemo-ChorusAssetManagementDemoTests/Pods-ChorusAssetManagementDemo-ChorusAssetManagementDemoTests-resources.sh\"\n";
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-ChorusAssetManagementDemo/Pods-ChorusAssetManagementDemo-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
@@ -416,7 +418,7 @@
 /* Begin XCBuildConfiguration section */
 		00E356F61AD99517003FC87E /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 5B7EB9410499542E8C5724F5 /* Pods-ChorusAssetManagementDemo-ChorusAssetManagementDemoTests.debug.xcconfig */;
+			baseConfigurationReference = 0EA443863608183CCED0AB53 /* Pods-ChorusAssetManagementDemo-ChorusAssetManagementDemoTests.debug.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -443,7 +445,7 @@
 		};
 		00E356F71AD99517003FC87E /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 89C6BE57DB24E9ADA2F236DE /* Pods-ChorusAssetManagementDemo-ChorusAssetManagementDemoTests.release.xcconfig */;
+			baseConfigurationReference = BD21B35669C6F39C85990F5B /* Pods-ChorusAssetManagementDemo-ChorusAssetManagementDemoTests.release.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				COPY_PHASE_STRIP = NO;
@@ -467,10 +469,12 @@
 		};
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 3B4392A12AC88292D35C810B /* Pods-ChorusAssetManagementDemo.debug.xcconfig */;
+			baseConfigurationReference = C8B871C33FF4F65D3512D7CC /* Pods-ChorusAssetManagementDemo.debug.xcconfig */;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = Appicon;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = ChorusAssetManagementDemo/ChorusAssetManagementDemo.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = H6WPNURXP3;
 				ENABLE_BITCODE = NO;
@@ -500,10 +504,12 @@
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 5709B34CF0A7D63546082F79 /* Pods-ChorusAssetManagementDemo.release.xcconfig */;
+			baseConfigurationReference = 48F510C5BA4279B7A23A9B9E /* Pods-ChorusAssetManagementDemo.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = ChorusAssetManagementDemo/ChorusAssetManagementDemo.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = H6WPNURXP3;
 				INFOPLIST_FILE = ChorusAssetManagementDemo/Info.plist;

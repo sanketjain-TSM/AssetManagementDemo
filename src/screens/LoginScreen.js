@@ -65,7 +65,6 @@ const LoginScreen = () => {
 
   const navigation = useNavigation();
 
-  // Main useEffect for initialization
   useEffect(() => {
     const subscription = Dimensions.addEventListener('change', ({window}) => {
       setDimensions(window);
@@ -82,14 +81,12 @@ const LoginScreen = () => {
         handleLogin(savedEmail, savedPassword);
       }
     };
-
     checkAuthentication();
     checkLogin();
 
     return () => subscription?.remove();
   }, [isAuthenticated]);
 
-  // User session tracking useEffect - only runs when authenticated
   useEffect(() => {
     if (!isAuthenticated) return;
 
@@ -100,7 +97,7 @@ const LoginScreen = () => {
 
       try {
         const response = await axios.post(
-          'http://34.57.92.8:8000/v1/user/session/start',
+          'https://api.matorg.com/v1/user/session/start',
           {},
           {
             headers: {
@@ -131,7 +128,7 @@ const LoginScreen = () => {
         // console.log("User Requested to Start Session in Foreground");
         try {
           const response = await axios.post(
-            'http://34.57.92.8:8000/v1/user/session/start',
+            'https://api.matorg.com/v1/user/session/start',
             {},
             {
               headers: {
@@ -148,11 +145,11 @@ const LoginScreen = () => {
         } catch (error) {
           console.error('Error tracking user session start:', error);
         }
-      } else if (nextAppState === 'background') {
+      } else if (nextAppState === 'background' || nextAppState === 'inactive') {
         // console.log("User Requested to End Session in Background");
         try {
           const response = await axios.post(
-            'http://34.57.92.8:8000/v1/user/session/end',
+            'https://api.matorg.com/v1/user/session/end',
             {},
             {
               headers: {
@@ -190,7 +187,6 @@ const LoginScreen = () => {
   };
 
   const handleEmailSubmit = async () => {
-    console.log('Email submitted:', email);
     Keyboard.dismiss();
     if (!email) {
       Alert.alert('Error', 'Please enter your email.');
@@ -198,14 +194,12 @@ const LoginScreen = () => {
     }
     setLoading(true);
     try {
-      console.log('Initiating login with email:', email);
       const response = await axios.post(
-        `http://34.57.92.8:8000/v1/auth/initLogin`,
+        `https://api.matorg.com/v1/auth/initLogin`,
         {
           email: email.toLowerCase(),
         },
       );
-      console.log('Response from initLogin:', response.data);
       const {hashedUser} = response?.data;
       if (response?.data?.isUserVerified) {
         setIsPasswordRequired(true);
@@ -221,13 +215,12 @@ const LoginScreen = () => {
   };
 
   const handleLogin = async (savedEmail = null, savedPassword = null) => {
-    console.log('Login Started');
     Keyboard.dismiss();
 
     setLoading(true);
     try {
       const response = await axios.post(
-        `http://34.57.92.8:8000/v1/auth/login`,
+        `https://api.matorg.com/v1/auth/login`,
         {
           email: email?.toLowerCase() || savedEmail,
           password: password || savedPassword,
@@ -377,10 +370,10 @@ const LoginScreen = () => {
         flexDirection: 'row',
         alignItems: 'center',
         fontSize: tablet ? 18 : 15,
-        marginLeft: tablet ? 0 : -10,
+        marginLeft: tablet ? -24 : -10,
       },
       rememberMeText: {
-        marginLeft: tablet ? 10 : -2,
+        marginLeft: tablet ? -12 : -2,
         fontSize: tablet ? 18 : 15,
         opacity: 0.6,
       },

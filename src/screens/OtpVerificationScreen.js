@@ -78,7 +78,7 @@ const OtpVerificationScreen = () => {
     setLoading(true);
     try {
       const response = await axios.post(
-        'http://34.57.92.8:8000/v1/auth/verifyOtp',
+        'https://api.matorg.com/v1/auth/verifyOtp',
         {
           hashedUser: hashedUser.toLowerCase(),
           otp: otpString,
@@ -103,7 +103,7 @@ const OtpVerificationScreen = () => {
     setLoading(true);
     try {
       const response = await axios.post(
-        'http://34.57.92.8:8000/v1/auth/forgotPassword',
+        'https://api.matorg.com/v1/auth/forgotPassword',
         {email},
       );
       if (response.status === 200) {
@@ -159,7 +159,7 @@ const OtpVerificationScreen = () => {
       width: '100%',
     },
     titleContainer: {
-      marginTop: tablet ? heightPercentageToDP(15) : 300,
+      marginTop: tablet ? heightPercentageToDP(15) : heightPercentageToDP(15),
     },
     logoContainer: {
       flexDirection: 'row',
@@ -171,7 +171,7 @@ const OtpVerificationScreen = () => {
         ? landscape
           ? heightPercentageToDP(15)
           : heightPercentageToDP(8)
-        : 210,
+        : heightPercentageToDP(6),
       marginTop: tablet ? heightPercentageToDP(12) : 50,
       transform: tablet ? [{scale: landscape ? 1.2 : 1.5}] : [{scale: 1}],
     },
@@ -237,20 +237,27 @@ const OtpVerificationScreen = () => {
       fontSize: tablet ? 20 : 18,
       fontFamily: 'Roboto',
     },
-    resendButton: {
+    backButton: {
       height: tablet ? heightPercentageToDP(5) : 50,
       backgroundColor: '#fff',
       justifyContent: 'center',
       alignItems: 'center',
       borderRadius: tablet ? 8 : 5,
-      borderWidth: 2,
+      marginBottom: 20,
+      borderWidth: 1.5,
       borderColor: '#202239',
-      marginBottom: tablet ? heightPercentageToDP(4) : 20,
+    },
+    backButtonText: {
+      color: '#202239',
+      fontSize: tablet ? 20 : 18,
+      fontFamily: 'Roboto',
     },
     resendText: {
       color: 'black',
       fontSize: tablet ? 20 : 18,
       fontFamily: 'Roboto',
+      textAlign: 'right',
+      textDecorationLine: 'underline',
     },
   });
 
@@ -270,12 +277,6 @@ const OtpVerificationScreen = () => {
             <View style={styles.logoContainer}>
               <Image source={chorus} style={styles.logo} />
             </View>
-            <ButtonComponent onPress={() => navigation.goBack()} useForeground>
-              <View style={styles.backButton}>
-                <Image source={require('../../assets/images/backArrow.png')} />
-              </View>
-            </ButtonComponent>
-
             <View style={styles.titleContainer}>
               <Text style={styles.title}>Verification</Text>
               <Text style={styles.title}>Code!</Text>
@@ -305,6 +306,15 @@ const OtpVerificationScreen = () => {
             </View>
 
             <TouchableOpacity
+              disabled={!!timer}
+              onPress={handleResendOtp}
+              activeOpacity={timer ? 1 : 0.8}>
+              <Text style={styles.resendText}>
+                Resend OTP{timer ? ` in (${timer}s)` : ''}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
               style={styles.verifyButton}
               onPress={handleVerify}
               activeOpacity={0.8}>
@@ -317,15 +327,11 @@ const OtpVerificationScreen = () => {
                 <Text style={styles.verifyButtonText}>Verify</Text>
               )}
             </TouchableOpacity>
-
             <TouchableOpacity
-              disabled={!!timer}
-              onPress={handleResendOtp}
-              activeOpacity={timer ? 1 : 0.8}>
-              <View style={styles.resendButton}>
-                <Text style={styles.resendText}>
-                  Resend OTP{timer ? ` in (${timer}s)` : ''}
-                </Text>
+              onPress={() => navigation.navigate('Login')}
+              activeOpacity={0.8}>
+              <View style={styles.backButton}>
+                <Text style={styles.backButtonText}>Back to Login</Text>
               </View>
             </TouchableOpacity>
           </View>

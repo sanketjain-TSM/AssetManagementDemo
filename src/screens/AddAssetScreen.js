@@ -10,6 +10,10 @@ import {
   ActivityIndicator,
   Dimensions,
   Keyboard,
+  Modal,
+  TextInput,
+  FlatList,
+  SafeAreaView,
 } from 'react-native';
 import {useNavigation, useRoute} from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -26,78 +30,478 @@ const heightPercentageToDP = heightPercent =>
 const isTablet = () => screenWidth >= 768 && screenHeight / screenWidth < 1.6;
 
 // Base API URL
-const BASE_URL = 'http://34.57.92.8:8000/v1';
+const BASE_URL = 'https://api.matorg.com/v1';
 
-// Mock data for development
-const MOCK_DATA = {
-  assetDescriptions: [
-    {label: 'Ventilator - Model A', value: 'ventilator_model_a'},
-    {label: 'X-Ray Machine - Digital', value: 'xray_machine_digital'},
-    {label: 'Hospital Bed - Standard', value: 'hospital_bed_standard'},
-    {label: 'Defibrillator - Portable', value: 'defibrillator_portable'},
-    {label: 'Ultrasound Machine', value: 'ultrasound_machine'},
-    {label: 'ECG Monitor', value: 'ecg_monitor'},
-    {label: 'Infusion Pump', value: 'infusion_pump'},
-    {label: 'Wheelchair - Electric', value: 'wheelchair_electric'},
-  ],
-  zones: [
-    {label: 'Zone A - ICU', value: 'zone_a_icu'},
-    {label: 'Zone B - Emergency', value: 'zone_b_emergency'},
-    {label: 'Zone C - Surgery', value: 'zone_c_surgery'},
-    {label: 'Zone D - General Ward', value: 'zone_d_general'},
-    {label: 'Zone E - Pharmacy', value: 'zone_e_pharmacy'},
-    {label: 'Zone F - Laboratory', value: 'zone_f_laboratory'},
-  ],
-  locationsByZone: {
-    zone_a_icu: [
-      {label: 'ICU Room 101', value: 'icu_room_101'},
-      {label: 'ICU Room 102', value: 'icu_room_102'},
-      {label: 'ICU Corridor A', value: 'icu_corridor_a'},
-    ],
-    zone_b_emergency: [
-      {label: 'Emergency Bay 1', value: 'emergency_bay_1'},
-      {label: 'Emergency Bay 2', value: 'emergency_bay_2'},
-      {label: 'Triage Area', value: 'triage_area'},
-    ],
-    zone_c_surgery: [
-      {label: 'Operating Room 1', value: 'operating_room_1'},
-      {label: 'Operating Room 2', value: 'operating_room_2'},
-      {label: 'Pre-Op Area', value: 'pre_op_area'},
-      {label: 'Recovery Room', value: 'recovery_room'},
-    ],
-    zone_d_general: [
-      {label: 'Ward Room 201', value: 'ward_room_201'},
-      {label: 'Ward Room 202', value: 'ward_room_202'},
-      {label: 'Nurses Station', value: 'nurses_station'},
-    ],
-    zone_e_pharmacy: [
-      {label: 'Main Pharmacy', value: 'main_pharmacy'},
-      {label: 'Pharmacy Storage', value: 'pharmacy_storage'},
-    ],
-    zone_f_laboratory: [
-      {label: 'Lab Room A', value: 'lab_room_a'},
-      {label: 'Lab Room B', value: 'lab_room_b'},
-      {label: 'Sample Storage', value: 'sample_storage'},
-    ],
-  },
-  assetDetails: {
-    AST001234: {
-      deviceId: 'DEV001234',
-      assetId: 'AST001234',
-      assetDescription: 'ventilator_model_a',
-      zone: 'zone_a_icu',
-      lastKnownLocation: 'icu_room_101',
+// ✅ Custom hook moved OUTSIDE the component
+const useDebounce = (value, delay) => {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+  return debouncedValue;
+};
+
+// Asset Description Modal Component
+const AssetDescriptionModal = ({
+  visible,
+  onClose,
+  onSubmit,
+  initialValue = '',
+  mode = 'add', // 'add' or 'edit'
+  loading = false,
+}) => {
+  const [value, setValue] = useState(initialValue);
+  const tablet = isTablet();
+
+  useEffect(() => {
+    setValue(initialValue);
+  }, [initialValue, visible]);
+
+  const handleSubmit = () => {
+    if (!value.trim()) {
+      Alert.alert('Error', 'Please enter a description.');
+      return;
+    }
+    onSubmit(value.trim());
+  };
+
+  const styles = StyleSheet.create({
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      justifyContent: 'center',
+      alignItems: 'center',
     },
-  },
+    modalContainer: {
+      backgroundColor: '#fff',
+      borderRadius: 12,
+      padding: 20,
+      width: tablet ? widthPercentageToDP(50) : widthPercentageToDP(90),
+      maxWidth: 500,
+    },
+    modalTitle: {
+      fontSize: tablet ? 20 : 18,
+      fontWeight: '600',
+      marginBottom: 20,
+      textAlign: 'center',
+      color: '#333',
+    },
+    inputContainer: {
+      marginBottom: 20,
+    },
+    inputLabel: {
+      fontSize: tablet ? 16 : 14,
+      fontWeight: '500',
+      marginBottom: 8,
+      color: '#333',
+    },
+    textInput: {
+      borderWidth: 1,
+      borderColor: '#ddd',
+      borderRadius: 8,
+      paddingHorizontal: 15,
+      paddingVertical: tablet ? 15 : 12,
+      fontSize: tablet ? 16 : 14,
+      backgroundColor: '#f9f9f9',
+    },
+    buttonContainer: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      gap: 10,
+    },
+    button: {
+      flex: 1,
+      paddingVertical: tablet ? 15 : 12,
+      borderRadius: 8,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    primaryButton: {
+      backgroundColor: '#EF652B',
+    },
+    secondaryButton: {
+      backgroundColor: '#f0f0f0',
+      borderWidth: 1,
+      borderColor: '#ddd',
+    },
+    buttonText: {
+      fontSize: tablet ? 16 : 14,
+      fontWeight: '500',
+    },
+    primaryButtonText: {
+      color: '#fff',
+    },
+    secondaryButtonText: {
+      color: '#333',
+    },
+    disabledButton: {
+      backgroundColor: '#ccc',
+    },
+  });
+
+  return (
+    <Modal
+      visible={visible}
+      transparent={true}
+      animationType="fade"
+      onRequestClose={onClose}>
+      <TouchableWithoutFeedback onPress={onClose}>
+        <View style={styles.modalOverlay}>
+          <TouchableWithoutFeedback onPress={e => e.stopPropagation()}>
+            <View style={styles.modalContainer}>
+              <Text style={styles.modalTitle}>
+                {mode === 'add' ? 'Add New Description' : 'Edit Description'}
+              </Text>
+
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Description/Name</Text>
+                <TextInput
+                  style={styles.textInput}
+                  value={value}
+                  onChangeText={setValue}
+                  placeholder="Enter asset description"
+                  autoFocus={true}
+                  multiline={false}
+                  editable={!loading}
+                />
+              </View>
+
+              <View style={styles.buttonContainer}>
+                <TouchableOpacity
+                  style={[styles.button, styles.secondaryButton]}
+                  onPress={onClose}
+                  disabled={loading}>
+                  <Text style={[styles.buttonText, styles.secondaryButtonText]}>
+                    Cancel
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[
+                    styles.button,
+                    styles.primaryButton,
+                    loading && styles.disabledButton,
+                  ]}
+                  onPress={handleSubmit}
+                  disabled={loading}>
+                  {loading ? (
+                    <ActivityIndicator size="small" color="#fff" />
+                  ) : (
+                    <Text style={[styles.buttonText, styles.primaryButtonText]}>
+                      {mode === 'add' ? 'Add' : 'Update'}
+                    </Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </View>
+          </TouchableWithoutFeedback>
+        </View>
+      </TouchableWithoutFeedback>
+    </Modal>
+  );
+};
+
+// Global dropdown state management
+let globalDropdownOpen = null;
+
+// Enhanced Dropdown Component - Connected with Outside Click
+const EnhancedDropdown = ({
+  label,
+  value,
+  onSelect,
+  items,
+  placeholder,
+  onAddNew,
+  onEdit,
+  loading = false,
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const tablet = isTablet();
+
+  const selectedItem = items.find(item => item.value === value);
+
+  const handleItemPress = item => {
+    if (item.isAddNew) {
+      onAddNew();
+    } else {
+      onSelect(item.value);
+      setIsOpen(false);
+      globalDropdownOpen = null;
+    }
+  };
+
+  // Global dropdown management
+  const handleDropdownToggle = () => {
+    if (isOpen) {
+      setIsOpen(false);
+      globalDropdownOpen = null;
+    } else {
+      // Close any other open dropdown
+      if (globalDropdownOpen && globalDropdownOpen !== 'assetDescription') {
+        globalDropdownOpen = null;
+      }
+      setIsOpen(true);
+      globalDropdownOpen = 'assetDescription';
+    }
+  };
+
+  // Close dropdown when another one opens
+  useEffect(() => {
+    if (
+      globalDropdownOpen &&
+      globalDropdownOpen !== 'assetDescription' &&
+      isOpen
+    ) {
+      setIsOpen(false);
+    }
+  }, [globalDropdownOpen, isOpen]);
+
+  // Close dropdown on outside click
+  const handleOutsideClick = () => {
+    if (isOpen) {
+      setIsOpen(false);
+      globalDropdownOpen = null;
+    }
+  };
+
+  const styles = StyleSheet.create({
+    container: {
+      marginBottom: 20,
+      // Add z-index to the container when dropdown is open
+      zIndex: isOpen ? 9999 : 1,
+      elevation: isOpen ? 10 : 1,
+    },
+    label: {
+      fontSize: tablet ? 16 : 14,
+      fontWeight: '500',
+      marginBottom: 8,
+      color: '#333',
+    },
+    // Add relative positioning to the dropdown wrapper
+    dropdownWrapper: {
+      position: 'relative',
+      zIndex: isOpen ? 9999 : 1,
+      backgroundColor: '#fff',
+    },
+    dropdownButton: {
+      borderWidth: 1,
+      borderColor: '#ddd',
+      borderRadius: 8,
+      paddingHorizontal: 15,
+      paddingVertical: tablet ? 15 : 12,
+      backgroundColor: '#fff',
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      // When dropdown is open, modify border radius to connect with dropdown
+      ...(isOpen && {
+        borderBottomLeftRadius: 0,
+        borderBottomRightRadius: 0,
+        borderBottomColor: 'transparent',
+      }),
+    },
+    dropdownText: {
+      fontSize: tablet ? 16 : 14,
+      color: selectedItem ? '#333' : '#999',
+      flex: 1,
+    },
+    dropdownArrow: {
+      width: 12,
+      height: 12,
+      tintColor: '#666',
+    },
+    dropdownList: {
+      position: 'absolute',
+      top: '100%',
+      left: 0,
+      right: 0,
+      backgroundColor: '#ffffff',
+      borderWidth: 1,
+      borderColor: '#ddd',
+      borderTopWidth: 0, // Remove top border to connect with button
+      borderBottomLeftRadius: 8,
+      borderBottomRightRadius: 8,
+      marginTop: 0, // Remove gap to make it connected
+      maxHeight: 200,
+      zIndex: 99999,
+      elevation: 15,
+      shadowColor: '#000',
+      shadowOffset: {width: 0, height: 4},
+      shadowOpacity: 0.25,
+      shadowRadius: 8,
+      // Platform specific shadow
+      ...(Platform.OS === 'ios' && {
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: 4},
+        shadowOpacity: 0.25,
+        shadowRadius: 8,
+      }),
+      ...(Platform.OS === 'android' && {
+        elevation: 15,
+      }),
+    },
+    dropdownItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 15,
+      paddingVertical: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: '#f0f0f0',
+      backgroundColor: '#ffffff',
+    },
+    lastDropdownItem: {
+      borderBottomWidth: 0,
+    },
+    addNewItem: {
+      backgroundColor: '#f8f9fa',
+      borderTopWidth: 1,
+      borderTopColor: '#e9ecef',
+    },
+    dropdownItemText: {
+      fontSize: tablet ? 16 : 14,
+      color: '#333',
+      flex: 1,
+    },
+    addNewText: {
+      color: '#EF652B',
+      fontWeight: '500',
+    },
+    editButton: {
+      backgroundColor: '#EF652B',
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 4,
+      marginLeft: 10,
+    },
+    editButtonText: {
+      color: '#fff',
+      fontSize: tablet ? 12 : 10,
+      fontWeight: '500',
+    },
+    selectedItem: {
+      backgroundColor: '#f0f8ff',
+    },
+    loadingContainer: {
+      padding: 20,
+      alignItems: 'center',
+      backgroundColor: '#ffffff',
+    },
+    // Overlay to capture outside clicks
+    overlay: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      zIndex: 9998,
+    },
+  });
+
+  const dropdownItems = [
+    {
+      label: '+ Add New Description',
+      value: 'add_new',
+      isAddNew: true,
+    },
+    ...items,
+  ];
+
+  return (
+    <>
+      {/* Overlay to handle outside clicks */}
+      {isOpen && (
+        <TouchableWithoutFeedback onPress={handleOutsideClick}>
+          <View style={StyleSheet.absoluteFillObject} />
+        </TouchableWithoutFeedback>
+      )}
+
+      <View style={styles.container}>
+        <Text style={styles.label}>{label}</Text>
+        <View style={styles.dropdownWrapper}>
+          <TouchableOpacity
+            style={styles.dropdownButton}
+            onPress={handleDropdownToggle}
+            disabled={loading}>
+            <Text
+              style={[
+                styles.dropdownText,
+                {color: selectedItem ? '#333' : '#999'},
+              ]}>
+              {selectedItem ? selectedItem.label : placeholder}
+            </Text>
+            {/* Add a simple arrow indicator */}
+            <Text
+              style={{
+                fontSize: 16,
+                color: '#666',
+                transform: [{rotate: isOpen ? '180deg' : '0deg'}],
+              }}>
+              ▼
+            </Text>
+          </TouchableOpacity>
+
+          {isOpen && (
+            <TouchableWithoutFeedback onPress={e => e.stopPropagation()}>
+              <View style={styles.dropdownList}>
+                {loading ? (
+                  <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="small" color="#EF652B" />
+                  </View>
+                ) : (
+                  <FlatList
+                    data={dropdownItems}
+                    keyExtractor={item => item.value.toString()}
+                    renderItem={({item, index}) => (
+                      <TouchableOpacity
+                        style={[
+                          styles.dropdownItem,
+                          index === dropdownItems.length - 1 &&
+                            styles.lastDropdownItem,
+                          item.isAddNew && styles.addNewItem,
+                          item.value === value && styles.selectedItem,
+                        ]}
+                        onPress={() => handleItemPress(item)}>
+                        <Text
+                          style={[
+                            styles.dropdownItemText,
+                            item.isAddNew && styles.addNewText,
+                          ]}>
+                          {item.label}
+                        </Text>
+                        {!item.isAddNew && (
+                          <TouchableOpacity
+                            style={styles.editButton}
+                            onPress={() => onEdit(item)}>
+                            <Text style={styles.editButtonText}>Edit</Text>
+                          </TouchableOpacity>
+                        )}
+                      </TouchableOpacity>
+                    )}
+                    nestedScrollEnabled={true}
+                  />
+                )}
+              </View>
+            </TouchableWithoutFeedback>
+          )}
+        </View>
+      </View>
+    </>
+  );
 };
 
 export default function AddAssetScreen() {
   const navigation = useNavigation();
   const route = useRoute();
 
-  // Check if in edit mode and get asset ID
+  // Check if in edit mode and get asset data
   const isEditMode = route.params?.mode === 'edit';
   const editAssetId = route.params?.assetId;
+  const assetData = route.params?.assetData;
 
   const [deviceId, setDeviceId] = useState('');
   const [assetId, setAssetId] = useState('');
@@ -105,40 +509,38 @@ export default function AddAssetScreen() {
   const [zone, setZone] = useState('');
   const [lastKnownLocation, setLastKnownLocation] = useState('');
   const [loading, setLoading] = useState(false);
-  const [initialLoading, setInitialLoading] = useState(isEditMode);
+  const [initialLoading, setInitialLoading] = useState(false);
 
   // Master data states
   const [assetDescriptionOptions, setAssetDescriptionOptions] = useState([]);
   const [zoneOptions, setZoneOptions] = useState([]);
-  const [locationOptions, setLocationOptions] = useState([]);
+  const [zoneLocationMap, setZoneLocationMap] = useState({});
 
-  // Loading states for specific operations
+  // Modal states
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalMode, setModalMode] = useState('add'); // 'add' or 'edit'
+  const [modalInitialValue, setModalInitialValue] = useState('');
+  const [modalLoading, setModalLoading] = useState(false);
+  const [editingItemId, setEditingItemId] = useState(null);
+  const [descriptionsLoading, setDescriptionsLoading] = useState(false);
+
+  console.log('Asset descriptions fetched:', assetDescriptionOptions);
+  console.log('Zones', zoneOptions);
+
+  // Validation states
   const [deviceIdValidating, setDeviceIdValidating] = useState(false);
   const [deviceIdValid, setDeviceIdValid] = useState(null);
-  const [locationsLoading, setLocationsLoading] = useState(false);
+  const [deviceIdMessage, setDeviceIdMessage] = useState('');
 
   const tablet = isTablet();
 
-  // Debounce hook for device ID validation
-  const useDebounce = (value, delay) => {
-    const [debouncedValue, setDebouncedValue] = useState(value);
-    useEffect(() => {
-      const handler = setTimeout(() => {
-        setDebouncedValue(value);
-      }, delay);
-      return () => {
-        clearTimeout(handler);
-      };
-    }, [value, delay]);
-    return debouncedValue;
-  };
-
-  const debouncedDeviceId = useDebounce(deviceId, 800); // 800ms delay
+  // ✅ Now using the hook that's defined outside the component
+  const debouncedDeviceId = useDebounce(deviceId, 800);
 
   useEffect(() => {
     loadMasterData();
-    if (isEditMode && editAssetId) {
-      loadAssetDetails();
+    if (isEditMode && assetData) {
+      prefillFormWithAssetData(assetData);
     }
   }, []);
 
@@ -148,63 +550,197 @@ export default function AddAssetScreen() {
       validateDeviceId(debouncedDeviceId);
     } else {
       setDeviceIdValid(null);
+      setDeviceIdMessage('');
     }
   }, [debouncedDeviceId]);
 
-  // Load locations when zone changes
+  // Auto-fill location when zone changes
   useEffect(() => {
-    if (zone) {
-      loadLocationsByZone(zone);
-      // Clear location if zone changes and it's not the initial load
-      if (lastKnownLocation && !initialLoading) {
-        setLastKnownLocation('');
-      }
-    } else {
-      setLocationOptions([]);
-      if (!initialLoading) {
-        setLastKnownLocation('');
-      }
+    if (zone && zoneLocationMap[zone]) {
+      setLastKnownLocation(zoneLocationMap[zone]);
+    } else if (!isEditMode && zone) {
+      setLastKnownLocation('');
     }
-  }, [zone]);
+  }, [zone, zoneLocationMap, isEditMode]);
+
+  // API Functions for Asset Descriptions
+  const createAssetDescription = async description => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      const response = await axios.post(
+        `${BASE_URL}/assets/description/create`,
+        {description},
+        {headers: {Authorization: `Bearer ${token}`}},
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Create asset description error:', error);
+      throw new Error('Failed to create asset description');
+    }
+  };
+
+  const updateAssetDescription = async (id, description) => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      const response = await axios.put(
+        `${BASE_URL}/assets/description/update/${id}`,
+        {description},
+        {headers: {Authorization: `Bearer ${token}`}},
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Update asset description error:', error);
+      throw new Error('Failed to update asset description');
+    }
+  };
+
+  // Modal handlers
+  const handleAddNew = () => {
+    setModalMode('add');
+    setModalInitialValue('');
+    setEditingItemId(null);
+    setModalVisible(true);
+  };
+
+  const handleEdit = item => {
+    setModalMode('edit');
+    setModalInitialValue(item.label);
+    setEditingItemId(item.value);
+    setModalVisible(true);
+  };
+
+  const handleModalSubmit = async value => {
+    setModalLoading(true);
+    try {
+      let response;
+      if (modalMode === 'add') {
+        response = await createAssetDescription(value);
+        Alert.alert('Success', 'Asset description added successfully');
+      } else {
+        response = await updateAssetDescription(editingItemId, value);
+        Alert.alert('Success', 'Asset description updated successfully');
+      }
+
+      // Refresh the asset descriptions
+      await loadAssetDescriptions();
+      setModalVisible(false);
+
+      // If we're adding a new item, select it
+      if (modalMode === 'add' && response.data?.id) {
+        setAssetDescription(response.data.id);
+      }
+    } catch (error) {
+      console.error('Modal submit error:', error);
+      Alert.alert(
+        'Error',
+        `Failed to ${modalMode} asset description. Please try again.`,
+      );
+    } finally {
+      setModalLoading(false);
+    }
+  };
+
+  const handleModalClose = () => {
+    setModalVisible(false);
+    setModalInitialValue('');
+    setEditingItemId(null);
+  };
+
+  // Load asset descriptions separately for refresh
+  const loadAssetDescriptions = async () => {
+    setDescriptionsLoading(true);
+    try {
+      const descriptions = await getAssetDescriptions();
+      setAssetDescriptionOptions(
+        descriptions?.map(d => ({
+          label: d.description,
+          value: d.id,
+        })) || [],
+      );
+    } catch (error) {
+      console.error('Load asset descriptions error:', error);
+    } finally {
+      setDescriptionsLoading(false);
+    }
+  };
+
+  // Prefill form with passed asset data
+  const prefillFormWithAssetData = async data => {
+    try {
+      setDeviceId(data.deviceId?.trim() || '');
+      setAssetId(data.tagNumber || '');
+      setAssetDescription(data.description || '');
+      setZone(data.zoneId || '');
+
+      const locationText =
+        data.floor && data.department
+          ? `${ordinalSuffixOf(data.floor)}${
+              data.department?.toLowerCase() !== 'unknown'
+                ? `, ${data.department}`
+                : ''
+            }`
+          : '';
+      setLastKnownLocation(locationText);
+
+      if (data.deviceId?.trim()) {
+        setDeviceIdValid(true);
+        setDeviceIdMessage('Device ID is valid');
+      }
+    } catch (error) {
+      console.error('Error prefilling form:', error);
+      Alert.alert('Error', 'Failed to load asset data.');
+    }
+  };
+
+  // Helper function to format floor text
+  function ordinalSuffixOf(i) {
+    if (i?.toLowerCase() === 'notinzone') {
+      return i;
+    }
+    i = Number(i);
+    let j = i % 10,
+      k = i % 100;
+    if (j == 1 && k != 11) {
+      return i + 'st Floor';
+    }
+    if (j == 2 && k != 12) {
+      return i + 'nd Floor';
+    }
+    if (j == 3 && k != 13) {
+      return i + 'rd Floor';
+    }
+    return i + 'th Floor';
+  }
 
   // Validate Device ID
   const validateDeviceId = async deviceIdToValidate => {
     setDeviceIdValidating(true);
+    setDeviceIdMessage('Validating device ID...');
     try {
       const token = await AsyncStorage.getItem('token');
 
-      // Mock API call - replace with actual endpoint
-      await new Promise(resolve => setTimeout(resolve, 500)); // Simulate API delay
+      const response = await axios.post(
+        `${BASE_URL}/chorus-api/validate-device`,
+        {deviceId: deviceIdToValidate},
+        {headers: {Authorization: `Bearer ${token}`}},
+      );
 
-      // Mock validation logic
-      const isValid =
-        deviceIdToValidate.startsWith('DEV') && deviceIdToValidate.length >= 6;
+      const {isValid, message} = response.data;
 
-      if (isValid) {
-        setDeviceIdValid(true);
-      } else {
-        setDeviceIdValid(false);
-        Alert.alert(
-          'Validation Error',
-          'Invalid Device ID format. Device ID should start with "DEV" and be at least 6 characters long.',
-        );
+      console.log(isValid, message, 'Device ID validation response:');
+
+      setDeviceIdValid(isValid);
+      setDeviceIdMessage(
+        message || (isValid ? 'Device ID is valid' : 'Device ID is invalid'),
+      );
+
+      if (!isValid) {
+        Alert.alert('Validation Error', message);
       }
-
-      // Actual API call would be:
-      // const response = await axios.post(
-      //   `${BASE_URL}/devices/validate`,
-      //   { deviceId: deviceIdToValidate },
-      //   { headers: { Authorization: `Bearer ${token}` } }
-      // );
-      // if (response.status === 200) {
-      //   setDeviceIdValid(response.data.valid);
-      //   if (!response.data.valid) {
-      //     Alert.alert('Validation Error', response.data.message);
-      //   }
-      // }
     } catch (error) {
       console.error('Device ID validation error:', error);
       setDeviceIdValid(false);
+      setDeviceIdMessage('Failed to validate device ID');
       Alert.alert(
         'Validation Error',
         'Failed to validate device ID. Please try again.',
@@ -219,94 +755,53 @@ export default function AddAssetScreen() {
     try {
       const token = await AsyncStorage.getItem('token');
 
-      // Mock API call - replace with actual endpoint
-      await new Promise(resolve => setTimeout(resolve, 300)); // Simulate API delay
-      return MOCK_DATA.assetDescriptions;
-
-      // Actual API call would be:
-      // const response = await axios.get(
-      //   `${BASE_URL}/master-data/asset-descriptions`,
-      //   { headers: { Authorization: `Bearer ${token}` } }
-      // );
-      // if (response.status === 200) {
-      //   return response.data.data || response.data;
-      // }
-      // return [];
+      const response = await axios.get(`${BASE_URL}/assets/all/description`, {
+        headers: {Authorization: `Bearer ${token}`},
+      });
+      console.log(response, ' Asset descriptions response:');
+      if (response.status === 200) {
+        console.log('Asset descriptions fetched:', response.data);
+        return response.data.data || response.data;
+      }
+      return [];
     } catch (error) {
       console.error('Asset descriptions fetch error:', error);
       throw new Error('Failed to fetch asset descriptions');
     }
   };
 
-  // Get Zones master data
+  // Get Zones master data with their respective locations
   const getZones = async () => {
     try {
       const token = await AsyncStorage.getItem('token');
 
-      // Mock API call - replace with actual endpoint
-      await new Promise(resolve => setTimeout(resolve, 300)); // Simulate API delay
-      return MOCK_DATA.zones;
+      const response = await axios.get(`${BASE_URL}/assets/zones/all`, {
+        headers: {Authorization: `Bearer ${token}`},
+      });
 
-      // Actual API call would be:
-      // const response = await axios.get(
-      //   `${BASE_URL}/master-data/zones`,
-      //   { headers: { Authorization: `Bearer ${token}` } }
-      // );
-      // if (response.status === 200) {
-      //   return response.data.data || response.data;
-      // }
-      // return [];
+      if (response.status === 200) {
+        console.log('Zones fetched:', response.data);
+        const zonesData = response.data.data || response.data;
+
+        const locationMap = {};
+        const zoneDropdownItems = [];
+
+        Object.entries(zonesData).forEach(([zoneId, location]) => {
+          locationMap[zoneId] = location;
+          zoneDropdownItems.push({
+            label: zoneId,
+            value: zoneId,
+          });
+        });
+
+        setZoneLocationMap(locationMap);
+        return zoneDropdownItems;
+      }
+
+      return [];
     } catch (error) {
       console.error('Zones fetch error:', error);
       throw new Error('Failed to fetch zones');
-    }
-  };
-
-  // Get Locations based on Zone ID
-  const getLocationsByZone = async zoneId => {
-    try {
-      const token = await AsyncStorage.getItem('token');
-
-      // Mock API call - replace with actual endpoint
-      await new Promise(resolve => setTimeout(resolve, 200)); // Simulate API delay
-      return MOCK_DATA.locationsByZone[zoneId] || [];
-
-      // Actual API call would be:
-      // const response = await axios.get(
-      //   `${BASE_URL}/master-data/locations?zoneId=${zoneId}`,
-      //   { headers: { Authorization: `Bearer ${token}` } }
-      // );
-      // if (response.status === 200) {
-      //   return response.data.data || response.data;
-      // }
-      // return [];
-    } catch (error) {
-      console.error('Locations fetch error:', error);
-      throw new Error('Failed to fetch locations');
-    }
-  };
-
-  // Get Asset Details for editing
-  const getAssetDetails = async assetId => {
-    try {
-      const token = await AsyncStorage.getItem('token');
-
-      // Mock API call - replace with actual endpoint
-      await new Promise(resolve => setTimeout(resolve, 400)); // Simulate API delay
-      return MOCK_DATA.assetDetails[assetId] || null;
-
-      // Actual API call would be:
-      // const response = await axios.get(
-      //   `${BASE_URL}/assets/${assetId}`,
-      //   { headers: { Authorization: `Bearer ${token}` } }
-      // );
-      // if (response.status === 200) {
-      //   return response.data.data || response.data;
-      // }
-      // return null;
-    } catch (error) {
-      console.error('Asset details fetch error:', error);
-      throw new Error('Failed to fetch asset details');
     }
   };
 
@@ -315,36 +810,21 @@ export default function AddAssetScreen() {
     try {
       const token = await AsyncStorage.getItem('token');
 
-      // Mock API call - replace with actual endpoint
-      await new Promise(resolve => setTimeout(resolve, 600)); // Simulate API delay
-
-      return {
-        status: isEdit ? 200 : 201,
-        data: {
-          success: true,
-          message: isEdit
-            ? 'Asset updated successfully'
-            : 'Asset added successfully',
-          data: assetData,
-        },
-      };
-
-      // Actual API call would be:
-      // if (isEdit) {
-      //   const response = await axios.put(
-      //     `${BASE_URL}/assets/${editAssetId}`,
-      //     assetData,
-      //     { headers: { Authorization: `Bearer ${token}` } }
-      //   );
-      //   return response;
-      // } else {
-      //   const response = await axios.post(
-      //     `${BASE_URL}/assets/add`,
-      //     assetData,
-      //     { headers: { Authorization: `Bearer ${token}` } }
-      //   );
-      //   return response;
-      // }
+      if (isEdit) {
+        const response = await axios.put(
+          `${BASE_URL}/assets/update-asset/${editAssetId}`,
+          assetData,
+          {headers: {Authorization: `Bearer ${token}`}},
+        );
+        return response;
+      } else {
+        const response = await axios.post(
+          `${BASE_URL}/assets/create-asset`,
+          assetData,
+          {headers: {Authorization: `Bearer ${token}`}},
+        );
+        return response;
+      }
     } catch (error) {
       console.error('Save asset error:', error);
       throw new Error(`Failed to ${isEdit ? 'update' : 'add'} asset`);
@@ -358,7 +838,14 @@ export default function AddAssetScreen() {
         getZones(),
       ]);
 
-      setAssetDescriptionOptions(descriptions);
+      console.log('Master data loaded:', descriptions, zones);
+
+      setAssetDescriptionOptions(
+        descriptions?.map(d => ({
+          label: d.description,
+          value: d.id,
+        })) || [],
+      );
       setZoneOptions(zones);
     } catch (error) {
       Alert.alert('Error', 'Failed to load master data.');
@@ -366,47 +853,10 @@ export default function AddAssetScreen() {
     }
   };
 
-  const loadAssetDetails = async () => {
-    try {
-      setInitialLoading(true);
-      const assetDetails = await getAssetDetails(editAssetId);
-
-      if (assetDetails) {
-        // Prefill form with asset details
-        setDeviceId(assetDetails.deviceId);
-        setAssetId(assetDetails.assetId);
-        setAssetDescription(assetDetails.assetDescription);
-        setZone(assetDetails.zone);
-        setLastKnownLocation(assetDetails.lastKnownLocation);
-      } else {
-        Alert.alert('Error', 'Asset not found');
-        navigation.goBack();
-      }
-    } catch (error) {
-      Alert.alert('Error', 'Failed to load asset details.');
-      console.error('Asset details loading error:', error);
-      navigation.goBack();
-    } finally {
-      setInitialLoading(false);
-    }
-  };
-
-  const loadLocationsByZone = async zoneId => {
-    try {
-      setLocationsLoading(true);
-      const locations = await getLocationsByZone(zoneId);
-      setLocationOptions(locations);
-    } catch (error) {
-      Alert.alert('Error', 'Failed to load locations for selected zone.');
-      console.error('Locations loading error:', error);
-    } finally {
-      setLocationsLoading(false);
-    }
-  };
-
   const handleDeviceIdChange = text => {
     setDeviceId(text);
-    setDeviceIdValid(null); // Reset validation state
+    setDeviceIdValid(null);
+    setDeviceIdMessage('');
   };
 
   const handleSaveAsset = async () => {
@@ -434,13 +884,13 @@ export default function AddAssetScreen() {
       return;
     }
     if (!lastKnownLocation.trim()) {
-      Alert.alert('Error', 'Please select Last Known Location.');
+      Alert.alert('Error', 'Last Known Location is required.');
       return;
     }
 
     setLoading(true);
     try {
-      const assetData = {
+      const assetDataToSave = {
         deviceId: deviceId.trim(),
         assetId: assetId.trim(),
         assetDescription: assetDescription.trim(),
@@ -448,7 +898,7 @@ export default function AddAssetScreen() {
         lastKnownLocation: lastKnownLocation.trim(),
       };
 
-      const response = await saveAsset(assetData, isEditMode);
+      const response = await saveAsset(assetDataToSave, isEditMode);
 
       if (response.status === 200 || response.status === 201) {
         const message =
@@ -461,13 +911,13 @@ export default function AddAssetScreen() {
             text: 'OK',
             onPress: () => {
               if (!isEditMode) {
-                // Clear form only in add mode
                 setDeviceId('');
                 setAssetId('');
                 setAssetDescription('');
                 setZone('');
                 setLastKnownLocation('');
                 setDeviceIdValid(null);
+                setDeviceIdMessage('');
               }
               navigation.goBack();
             },
@@ -490,22 +940,11 @@ export default function AddAssetScreen() {
     }
   };
 
-  const getDeviceIdValidationIcon = () => {
-    if (deviceIdValidating) {
-      return (
-        <ActivityIndicator
-          size="small"
-          color="#EF652B"
-          style={{marginRight: 8}}
-        />
-      );
-    }
-    if (deviceIdValid === true) {
-      return <Text style={{color: 'green', marginRight: 8}}>✓</Text>;
-    }
-    if (deviceIdValid === false) {
-      return <Text style={{color: 'red', marginRight: 8}}>✗</Text>;
-    }
+  // Get validation state for device ID
+  const getDeviceIdValidationState = () => {
+    if (deviceIdValidating) return 'validating';
+    if (deviceIdValid === true) return 'valid';
+    if (deviceIdValid === false) return 'invalid';
     return null;
   };
 
@@ -567,12 +1006,6 @@ export default function AddAssetScreen() {
       fontSize: 16,
       color: '#666',
     },
-    validationContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'flex-end',
-      marginTop: 5,
-    },
   });
 
   if (initialLoading) {
@@ -598,91 +1031,103 @@ export default function AddAssetScreen() {
   }
 
   return (
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-      <KeyboardAwareScrollView
-        contentContainerStyle={styles.scrollContainer}
-        enableOnAndroid
-        extraScrollHeight={20}
-        extraHeight={100}>
-        <View style={styles.header}>
-          <TouchableOpacity
-            onPress={() => navigation.goBack()}
-            style={styles.backButton}>
-            <Image
-              source={require('../../assets/images/backArrow.png')}
-              style={styles.backArrow}
-            />
-          </TouchableOpacity>
-          <Text style={styles.headerText}>
-            {isEditMode ? 'Edit Asset' : 'Add Asset'}
-          </Text>
-        </View>
-        <View style={styles.formContainer}>
-          <DynamicInputField
-            label="Device ID"
-            value={deviceId}
-            onChangeText={handleDeviceIdChange}
-            placeholder="Scan or enter device ID"
-            scannable={true}
-            storageKey="deviceId"
-          />
-          <View style={styles.validationContainer}>
-            {getDeviceIdValidationIcon()}
+    <SafeAreaView style={{flex: 1}}>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+        <KeyboardAwareScrollView
+          contentContainerStyle={styles.scrollContainer}
+          enableOnAndroid
+          extraScrollHeight={20}
+          extraHeight={100}>
+          <View style={styles.header}>
+            <TouchableOpacity
+              onPress={() => navigation.goBack()}
+              style={styles.backButton}>
+              <Image
+                source={require('../../assets/images/backArrow.png')}
+                style={styles.backArrow}
+              />
+            </TouchableOpacity>
+            <Text style={styles.headerText}>
+              {isEditMode ? 'Edit Asset' : 'Add Asset'}
+            </Text>
           </View>
 
-          <DynamicInputField
-            label="Asset ID"
-            value={assetId}
-            onChangeText={setAssetId}
-            placeholder="Scan barcode or QR code"
-            scannable={true}
-            storageKey="assetId"
-          />
+          <View style={styles.formContainer}>
+            <DynamicInputField
+              label="Device ID"
+              value={deviceId}
+              onChangeText={handleDeviceIdChange}
+              placeholder="Scan or enter device ID"
+              storageKey="deviceId"
+              validationState={getDeviceIdValidationState()}
+              validationMessage={deviceIdMessage}
+              showValidationIcon={true}
+            />
 
-          <DynamicInputField
-            label="Asset Description/Name"
-            value={assetDescription}
-            onChangeText={setAssetDescription}
-            placeholder="Select asset description or name"
-            useDropdown={true}
-            dropdownItems={assetDescriptionOptions}
-          />
+            <DynamicInputField
+              label="Asset ID"
+              value={assetId}
+              onChangeText={setAssetId}
+              placeholder="Scan barcode or QR code"
+              storageKey="assetId"
+            />
 
-          <DynamicInputField
-            label="Zone"
-            value={zone}
-            onChangeText={setZone}
-            placeholder="Select zone"
-            useDropdown={true}
-            dropdownItems={zoneOptions}
-          />
+            <EnhancedDropdown
+              label="Asset Description/Name"
+              value={assetDescription}
+              onSelect={setAssetDescription}
+              items={assetDescriptionOptions}
+              placeholder="Select asset description or name"
+              onAddNew={handleAddNew}
+              onEdit={handleEdit}
+              loading={descriptionsLoading}
+            />
 
-          <DynamicInputField
-            label="Last Known Location"
-            value={lastKnownLocation}
-            onChangeText={setLastKnownLocation}
-            placeholder={
-              locationsLoading ? 'Loading locations...' : 'First Floor Biomedical'
-            }
-            useDropdown={false}
-            dropdownItems={locationOptions}
-            editable={!locationsLoading && locationOptions.length > 0}
-          />
+            <DynamicInputField
+              label="Zone"
+              value={zone}
+              onChangeText={setZone}
+              placeholder="Select zone"
+              useDropdown={true}
+              dropdownItems={zoneOptions}
+            />
 
-          <TouchableOpacity
-            style={[styles.button, loading && styles.buttonDisabled]}
-            onPress={handleSaveAsset}
-            disabled={loading}>
-            {loading ? (
-              <ActivityIndicator size="small" color="#FFF" />
-            ) : (
-              <Text style={styles.buttonText}>
-                {isEditMode ? 'Update Asset' : 'Add Asset'}
-              </Text>
-            )}
-          </TouchableOpacity>
-        </View>
-      </KeyboardAwareScrollView>
-    </TouchableWithoutFeedback>
+            <DynamicInputField
+              label="Last Known Location"
+              value={lastKnownLocation}
+              onChangeText={setLastKnownLocation}
+              placeholder={
+                zone
+                  ? 'Location will be auto-filled based on zone'
+                  : 'Select a zone first'
+              }
+              editable={false}
+            />
+
+            <TouchableOpacity
+              style={[styles.button, loading && styles.buttonDisabled]}
+              onPress={handleSaveAsset}
+              disabled={loading}>
+              {loading ? (
+                <ActivityIndicator size="small" color="#FFF" />
+              ) : (
+                <Text style={styles.buttonText}>
+                  {isEditMode ? 'Update Asset' : 'Add Asset'}
+                </Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </KeyboardAwareScrollView>
+      </TouchableWithoutFeedback>
+
+      <AssetDescriptionModal
+        visible={modalVisible}
+        onClose={handleModalClose}
+        onSubmit={handleModalSubmit}
+        initialValue={modalInitialValue}
+        mode={modalMode}
+        loading={modalLoading}
+      />
+    </SafeAreaView>
   );
 }

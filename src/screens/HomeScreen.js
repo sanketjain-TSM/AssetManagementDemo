@@ -68,10 +68,12 @@ const HomeScreen = () => {
       const token = await AsyncStorage.getItem('token');
       const userId = await AsyncStorage.getItem('savedEmail');
       const response = await axios.post(
-        `http://34.57.92.8:8000/v1/assets/search`,
+        `https://api.matorg.com/v1/assets/search`,
         {searchQuery: query},
         {headers: {Authorization: `Bearer ${token}`}},
       );
+
+      setSearchResults(response.data);
       await AsyncStorage.setItem(`searchQuery-${userId}`, query);
       await AsyncStorage.setItem(
         `searchResults-${userId}`,
@@ -184,16 +186,6 @@ const HomeScreen = () => {
       justifyContent: 'center',
       alignItems: 'center',
     },
-    bleButtonContainer: {
-      height: 60,
-    },
-    bleButton: {
-      marginTop: 30,
-      alignSelf: 'flex-end',
-      width: 30,
-      height: 30,
-      tintColor: '#EF652B',
-    },
   });
 
   return (
@@ -203,13 +195,6 @@ const HomeScreen = () => {
           source={require('../../assets/images/chorus.png')}
           style={styles.logo}
         />
-        {Platform.OS === 'ios' && (
-          <TouchableOpacity
-            style={styles.bleButtonContainer}
-            onPress={() => navigation.navigate('BleScanner')}>
-            <Image source={bleIcon} style={styles.bleButton} />
-          </TouchableOpacity>
-        )}
       </View>
       <View style={styles.searchBarContainer}>
         <View style={styles.searchBar}>

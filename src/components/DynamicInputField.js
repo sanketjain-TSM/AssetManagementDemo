@@ -5,10 +5,12 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  FlatList,
   Dimensions,
   Alert,
   Modal,
+  Keyboard,
+  FlatList,
+  TouchableWithoutFeedback,
   Platform,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
@@ -16,430 +18,800 @@ import DropDownPicker from 'react-native-dropdown-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const {width: screenWidth, height: screenHeight} = Dimensions.get('window');
-const widthPercentageToDP = widthPercent =>
-  (screenWidth * parseFloat(widthPercent)) / 100;
-const heightPercentageToDP = heightPercent =>
-  (screenHeight * parseFloat(heightPercent)) / 100;
 const isTablet = () => screenWidth >= 768 && screenHeight / screenWidth < 1.6;
 
-const DynamicInputField = ({
-  label,
-  value,
-  onChangeText,
-  placeholder,
-  scannable = false,
-  useDropdown = false,
-  dropdownItems = [],
-  multiline = false,
-  editable = true,
-  storageKey, // Key to store/retrieve auto-suggestions
-  style,
-  inputStyle,
-  validationState, // 'validating', 'valid', 'invalid', null
-  validationMessage,
-  showValidationIcon = false,
-  ...props
-}) => {
-  // Always declare all hooks at the top level
-  const [suggestions, setSuggestions] = useState([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [cameraVisible, setCameraVisible] = useState(false);
-  const [hasPermission, setHasPermission] = useState(false);
-  const [open, setOpen] = useState(false);
-  const [items, setItems] = useState([]);
-  const inputRef = useRef(null);
-  const tablet = isTablet();
+// Move base styles outside component to prevent recreation
+const createStyles = (
+  tablet,
+  validationColor,
+  editable,
+  useAddEdit,
+  useDropdown,
+  open,
+) =>
+  StyleSheet.create({
+    container: {
+      width: '100%',
+      marginBottom: tablet ? 25 : 20,
+      zIndex: useDropdown && open ? 5000 : 1,
+    },
+    label: {
+      fontSize: tablet ? 18 : 16,
+      fontWeight: '500',
+      marginBottom: 8,
+      color: '#0E0E0E',
+    },
+    inputContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: validationColor,
+      borderRadius: 8,
+      backgroundColor: '#fff',
+      position: 'relative',
+    },
+    input: {
+      flex: 1,
+      height: tablet ? 56 : 48,
+      paddingHorizontal: 12,
+      fontSize: tablet ? 16 : 14,
+      color: '#0E0E0E',
+      opacity: editable ? 1 : 0.6,
+    },
+    multilineInput: {
+      height: tablet ? 80 : 70,
+      textAlignVertical: 'top',
+      paddingTop: 12,
+    },
+    validationIcon: {
+      paddingHorizontal: 8,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    validationMessage: {
+      fontSize: 12,
+      marginTop: 4,
+      marginLeft: 4,
+    },
+    // Enhanced dropdown styles (same as EnhancedDropdown component)
+    dropdownWrapper: {
+      position: 'relative',
+      zIndex: open ? 9999 : 1,
+    },
+    dropdownButton: {
+      borderWidth: 1,
+      borderColor: validationColor,
+      borderRadius: 8,
+      paddingHorizontal: 15,
+      paddingVertical: tablet ? 15 : 12,
+      backgroundColor: '#fff',
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      // When dropdown is open, modify border radius to connect with dropdown
+      ...(open && {
+        borderBottomLeftRadius: 0,
+        borderBottomRightRadius: 0,
+        borderBottomColor: 'transparent',
+      }),
+    },
+    dropdownText: {
+      fontSize: tablet ? 16 : 14,
+      color: '#333',
+      flex: 1,
+    },
+    dropdownList: {
+      position: 'absolute',
+      top: '100%',
+      left: 0,
+      right: 0,
+      backgroundColor: '#ffffff',
+      borderWidth: 1,
+      borderColor: validationColor,
+      borderTopWidth: 0, // Remove top border to connect with button
+      borderBottomLeftRadius: 8,
+      borderBottomRightRadius: 8,
+      marginTop: 0, // Remove gap to make it connected
+      maxHeight: 200,
+      zIndex: 99999,
+      elevation: 15,
+      shadowColor: '#000',
+      shadowOffset: {width: 0, height: 4},
+      shadowOpacity: 0.25,
+      shadowRadius: 8,
+      // Platform specific shadow
+      ...(Platform.OS === 'ios' && {
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: 4},
+        shadowOpacity: 0.25,
+        shadowRadius: 8,
+      }),
+      ...(Platform.OS === 'android' && {
+        elevation: 15,
+      }),
+    },
+    dropdownItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 15,
+      paddingVertical: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: '#f0f0f0',
+      backgroundColor: '#ffffff',
+    },
+    lastDropdownItem: {
+      borderBottomWidth: 0,
+    },
+    dropdownItemText: {
+      fontSize: tablet ? 16 : 14,
+      color: '#333',
+      flex: 1,
+    },
+    selectedItem: {
+      backgroundColor: '#f0f8ff',
+    },
+    // Legacy dropdown styles (for backward compatibility)
+    dropdown: {
+      backgroundColor: '#fff',
+      borderWidth: 1,
+      borderColor: validationColor,
+      borderRadius: 8,
+      height: tablet ? 56 : 48,
+      paddingRight: useAddEdit ? 80 : 12,
+    },
+    dropdownContainer: {
+      position: 'relative',
+    },
+    dropdownAddButton: {
+      position: 'absolute',
+      right: 8,
+      top: 4,
+      width: 40,
+      height: tablet ? 48 : 40,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: '#F8F8F8',
+      borderRadius: 6,
+      borderWidth: 1,
+      borderColor: '#E0E0E0',
+      zIndex: 10000,
+      elevation: 10,
+    },
+    dropdownItemContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+    },
+    selectedText: {
+      color: '#4CAF50',
+      fontWeight: '500',
+    },
+    dropdownItemActions: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    dropdownItemAction: {
+      padding: 6,
+      marginLeft: 8,
+    },
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    modalContainer: {
+      width: '90%',
+      maxWidth: 400,
+      backgroundColor: '#fff',
+      borderRadius: 12,
+      padding: 24,
+    },
+    modalTitle: {
+      fontSize: 18,
+      fontWeight: '600',
+      marginBottom: 20,
+      textAlign: 'center',
+      color: '#0E0E0E',
+    },
+    modalInput: {
+      borderWidth: 1,
+      borderColor: '#E0E0E0',
+      borderRadius: 8,
+      padding: 12,
+      fontSize: 16,
+      marginBottom: 20,
+      color: '#0E0E0E',
+    },
+    modalButtons: {
+      flexDirection: 'row',
+      gap: 12,
+    },
+    modalButton: {
+      flex: 1,
+      padding: 12,
+      borderRadius: 8,
+      alignItems: 'center',
+    },
+    modalButtonCancel: {
+      backgroundColor: '#F5F5F5',
+    },
+    modalButtonSubmit: {
+      backgroundColor: '#4CAF50',
+    },
+    modalButtonTextCancel: {
+      fontSize: 16,
+      fontWeight: '500',
+      color: '#666',
+    },
+    modalButtonTextSubmit: {
+      fontSize: 16,
+      fontWeight: '500',
+      color: '#fff',
+    },
+  });
 
-  // Memoized validation color
-  const validationColor = useMemo(() => {
-    switch (validationState) {
-      case 'valid':
-        return '#4CAF50';
-      case 'invalid':
-        return '#F44336';
-      case 'validating':
-        return '#EF652B';
-      default:
-        return '#D9D9D9';
-    }
-  }, [validationState]);
+// Global dropdown state management
+let globalDropdownOpen = null;
 
-  // Always call useEffect hooks with proper dependencies
-  useEffect(() => {
-    if (scannable) {
-      requestCameraPermission();
-    }
-  }, [scannable]);
+const DynamicInputField = React.memo(
+  ({
+    label,
+    value,
+    onChangeText,
+    placeholder,
+    useDropdown = false,
+    dropdownItems = [],
+    useAddEdit = false,
+    isDeleteEnabledInDropdown = false,
+    multiline = false,
+    editable = true,
+    storageKey,
+    style,
+    inputStyle,
+    validationState,
+    validationMessage,
+    showValidationIcon = false,
+    onDropdownItemsChange,
+    ...props
+  }) => {
+    const [open, setOpen] = useState(false);
+    const [items, setItems] = useState([]);
+    const [showAddEditModal, setShowAddEditModal] = useState(false);
+    const [editingItem, setEditingItem] = useState(null);
+    const [newItemText, setNewItemText] = useState('');
+    const [isInitialized, setIsInitialized] = useState(false);
 
-  useEffect(() => {
-    if (storageKey) {
-      loadSuggestions();
-    }
-  }, [storageKey]);
+    const inputRef = useRef(null);
+    const modalInputRef = useRef(null);
 
-  useEffect(() => {
-    if (JSON.stringify(items) !== JSON.stringify(dropdownItems)) {
-      setItems(dropdownItems);
-    }
-  }, [dropdownItems]);
+    console.log('dropdownItems', dropdownItems);
 
-  const requestCameraPermission = useCallback(async () => {
-    try {
-      // For now, we'll simulate permission - replace with actual camera permission logic
-      setHasPermission(true);
-      // You can implement actual camera permission logic here
-      // const permission = await Camera.requestCameraPermission();
-      // setHasPermission(permission === 'authorized');
-    } catch (error) {
-      console.log('Camera permission error:', error);
-    }
-  }, []);
+    // Use stable refs for callbacks to prevent useEffect re-runs
+    const onChangeTextRef = useRef(onChangeText);
+    const onDropdownItemsChangeRef = useRef(onDropdownItemsChange);
+    const tablet = isTablet();
 
-  const loadSuggestions = useCallback(async () => {
-    if (!storageKey) return;
-    try {
-      const stored = await AsyncStorage.getItem(`suggestions_${storageKey}`);
-      if (stored) {
-        setSuggestions(JSON.parse(stored));
+    // Only update refs when functions actually change
+    useEffect(() => {
+      onChangeTextRef.current = onChangeText;
+    }, [onChangeText]);
+
+    useEffect(() => {
+      onDropdownItemsChangeRef.current = onDropdownItemsChange;
+    }, [onDropdownItemsChange]);
+
+    // Memoize dropdownItems to prevent infinite loops
+    const memoizedDropdownItems = useMemo(() => {
+      return Array.isArray(dropdownItems) ? dropdownItems : [];
+    }, [dropdownItems]);
+
+    // Memoize validation color
+    const validationColor = useMemo(() => {
+      switch (validationState) {
+        case 'valid':
+          return '#4CAF50';
+        case 'invalid':
+          return '#F44336';
+        case 'validating':
+          return '#FF9800';
+        default:
+          return '#D9D9D9';
       }
-    } catch (error) {
-      console.log('Error loading suggestions:', error);
-    }
-  }, [storageKey]);
+    }, [validationState]);
 
-  const saveToSuggestions = useCallback(
-    async newValue => {
-      if (!storageKey || !newValue.trim()) return;
+    // Memoize styles with reduced dependencies
+    const styles = useMemo(
+      () =>
+        createStyles(
+          tablet,
+          validationColor,
+          editable,
+          useAddEdit,
+          useDropdown,
+          open,
+        ),
+      [tablet, validationColor, editable, useAddEdit, useDropdown, open],
+    );
+
+    // Global dropdown management
+    const handleDropdownToggle = useCallback(() => {
+      if (open) {
+        setOpen(false);
+        globalDropdownOpen = null;
+      } else {
+        // Close any other open dropdown
+        if (globalDropdownOpen && globalDropdownOpen !== storageKey) {
+          globalDropdownOpen = null;
+        }
+        setOpen(true);
+        globalDropdownOpen = storageKey || 'default';
+      }
+    }, [open, storageKey]);
+
+    // Close dropdown when another one opens
+    useEffect(() => {
+      if (
+        globalDropdownOpen &&
+        globalDropdownOpen !== (storageKey || 'default') &&
+        open
+      ) {
+        setOpen(false);
+      }
+    }, [globalDropdownOpen, storageKey, open]);
+
+    // Stable callback for loading dropdown items - removed memoizedDropdownItems dependency
+    const loadDropdownItems = useCallback(async () => {
+      if (!useAddEdit || !storageKey) return [];
 
       try {
-        const currentSuggestions = suggestions.filter(
-          item => item.toLowerCase() !== newValue.toLowerCase(),
+        const stored = await AsyncStorage.getItem(
+          `dropdown_items_${storageKey}`,
         );
-        const updatedSuggestions = [newValue, ...currentSuggestions].slice(
-          0,
-          10,
-        ); // Keep last 10
-        setSuggestions(updatedSuggestions);
-        await AsyncStorage.setItem(
-          `suggestions_${storageKey}`,
-          JSON.stringify(updatedSuggestions),
-        );
+        if (stored) {
+          const storedItems = JSON.parse(stored);
+          if (Array.isArray(storedItems)) {
+            return storedItems;
+          }
+        }
+        return [];
       } catch (error) {
-        console.log('Error saving suggestions:', error);
+        console.log('Error loading dropdown items:', error);
+        return [];
       }
-    },
-    [storageKey, suggestions],
-  );
+    }, [useAddEdit, storageKey]);
 
-  const handleInputChange = useCallback(
-    text => {
-      onChangeText(text);
+    // Initialize component only once
+    useEffect(() => {
+      let isMounted = true;
 
-      if (storageKey && text.length > 0) {
-        const filtered = suggestions.filter(item =>
-          item.toLowerCase().includes(text.toLowerCase()),
+      const initializeComponent = async () => {
+        if (useDropdown) {
+          if (storageKey && useAddEdit) {
+            // Load stored items and merge with default items
+            const storedItems = await loadDropdownItems();
+            const merged = [...dropdownItems, ...storedItems];
+
+            // Add default items that aren't already in stored items
+            memoizedDropdownItems.forEach(item => {
+              if (!merged.find(stored => stored.value === item.value)) {
+                merged.push(item);
+              }
+            });
+
+            if (isMounted) {
+              setItems(merged);
+            }
+          } else {
+            // Just use the memoized dropdown items
+            if (isMounted) {
+              setItems(memoizedDropdownItems, ...dropdownItems);
+            }
+          }
+        }
+
+        if (isMounted) {
+          setIsInitialized(true);
+        }
+      };
+
+      initializeComponent();
+
+      return () => {
+        isMounted = false;
+      };
+    }, []); // Empty dependency array - only run once
+
+    // Separate effect to handle updates to dropdownItems prop
+    useEffect(() => {
+      if (!isInitialized) return;
+
+      // Only update if not using stored items
+      if (!useAddEdit || !storageKey) {
+        setItems(prevItems => {
+          const itemsChanged =
+            JSON.stringify(prevItems) !== JSON.stringify(memoizedDropdownItems);
+          return itemsChanged ? memoizedDropdownItems : prevItems;
+        });
+      }
+    }, [memoizedDropdownItems, useAddEdit, storageKey, isInitialized]);
+
+    const saveDropdownItems = useCallback(
+      async updatedItems => {
+        if (!useAddEdit || !storageKey) return;
+        try {
+          await AsyncStorage.setItem(
+            `dropdown_items_${storageKey}`,
+            JSON.stringify(updatedItems),
+          );
+          onDropdownItemsChangeRef.current?.(updatedItems);
+        } catch (error) {
+          console.log('Error saving dropdown items:', error);
+        }
+      },
+      [useAddEdit, storageKey],
+    );
+
+    // CRITICAL: Stable input change handler
+    const handleInputChange = useCallback(text => {
+      // Don't create new function reference on every call
+      if (onChangeTextRef.current) {
+        onChangeTextRef.current(text);
+      }
+    }, []); // Empty dependency array makes this stable
+
+    const openAddEditModal = useCallback((item = null) => {
+      setEditingItem(item);
+      setNewItemText(item?.label || '');
+      setShowAddEditModal(true);
+      setTimeout(() => {
+        modalInputRef.current?.focus();
+      }, 300);
+    }, []);
+
+    const closeAddEditModal = useCallback(() => {
+      Keyboard.dismiss();
+      setShowAddEditModal(false);
+      setEditingItem(null);
+      setNewItemText('');
+    }, []);
+
+    const handleAddEditSubmit = useCallback(async () => {
+      if (!newItemText.trim()) return;
+
+      Keyboard.dismiss();
+
+      const newItem = {
+        label: newItemText.trim(),
+        value: editingItem
+          ? editingItem.value
+          : newItemText.trim().toLowerCase().replace(/\s+/g, '_'),
+      };
+
+      setItems(prevItems => {
+        let updatedItems;
+        if (editingItem) {
+          updatedItems = prevItems.map(item =>
+            item.value === editingItem.value ? newItem : item,
+          );
+        } else {
+          const exists = prevItems.find(item => item.value === newItem.value);
+          if (exists) {
+            Alert.alert('Error', 'Item already exists!');
+            return prevItems;
+          }
+          updatedItems = [newItem, ...prevItems];
+        }
+
+        saveDropdownItems(updatedItems);
+        return updatedItems;
+      });
+
+      if (onChangeTextRef.current) {
+        onChangeTextRef.current(newItem.value);
+      }
+      closeAddEditModal();
+    }, [newItemText, editingItem, saveDropdownItems, closeAddEditModal]);
+
+    const handleDeleteItem = useCallback(
+      async itemToDelete => {
+        Alert.alert(
+          'Delete Item',
+          `Are you sure you want to delete "${itemToDelete.label}"?`,
+          [
+            {text: 'Cancel'},
+            {
+              text: 'Delete',
+              style: 'destructive',
+              onPress: () => {
+                setItems(prevItems => {
+                  const updatedItems = prevItems.filter(
+                    item => item.value !== itemToDelete.value,
+                  );
+                  saveDropdownItems(updatedItems);
+                  return updatedItems;
+                });
+
+                if (value === itemToDelete.value && onChangeTextRef.current) {
+                  onChangeTextRef.current('');
+                }
+              },
+            },
+          ],
         );
-        setShowSuggestions(filtered.length > 0);
-      } else {
-        setShowSuggestions(false);
-      }
-    },
-    [onChangeText, storageKey, suggestions],
-  );
+      },
+      [value, saveDropdownItems],
+    );
 
-  const handleInputBlur = useCallback(() => {
-    // Delay hiding suggestions to allow selection
-    setTimeout(() => setShowSuggestions(false), 200);
-    if (value && value.trim()) {
-      saveToSuggestions(value.trim());
-    }
-  }, [value, saveToSuggestions]);
+    const renderValidationIcon = useCallback(() => {
+      if (!showValidationIcon) return null;
 
-  const selectSuggestion = useCallback(
-    item => {
-      onChangeText(item);
-      setShowSuggestions(false);
-      inputRef.current?.blur();
-    },
-    [onChangeText],
-  );
+      const iconMap = {
+        validating: 'refresh',
+        valid: 'check-circle',
+        invalid: 'error',
+      };
 
-  const openCamera = useCallback(() => {
-    if (!hasPermission) {
-      Alert.alert(
-        'Camera Permission',
-        'Camera permission is required to scan codes.',
-        [
-          {text: 'Cancel'},
-          {text: 'OK', onPress: () => requestCameraPermission()},
-        ],
+      const iconName = iconMap[validationState];
+      if (!iconName) return null;
+
+      return (
+        <View style={styles.validationIcon}>
+          <Icon name={iconName} size={16} color={validationColor} />
+        </View>
       );
-      return;
-    }
+    }, [
+      showValidationIcon,
+      validationState,
+      validationColor,
+      styles.validationIcon,
+    ]);
 
-    // For demo purposes, we'll simulate a scan result
-    // Replace this with actual camera implementation
-    Alert.alert(
-      'Scanner',
-      'Camera scanner would open here. For demo, enter a test value?',
+    const renderDropdownItem = useCallback(
+      ({item, isSelected}) => {
+        if (!useAddEdit) return null;
+
+        return (
+          <View style={styles.dropdownItemContainer}>
+            <Text
+              style={[
+                styles.dropdownItemText,
+                isSelected && styles.selectedText,
+              ]}>
+              {item.label}
+            </Text>
+            <View style={styles.dropdownItemActions}>
+              <TouchableOpacity
+                style={styles.dropdownItemAction}
+                onPress={() => openAddEditModal(item)}>
+                <Icon name="edit" size={16} color="#666" />
+              </TouchableOpacity>
+              {isDeleteEnabledInDropdown && (
+                <TouchableOpacity
+                  style={styles.dropdownItemAction}
+                  onPress={() => handleDeleteItem(item)}>
+                  <Icon name="delete" size={16} color="#F44336" />
+                </TouchableOpacity>
+              )}
+            </View>
+          </View>
+        );
+      },
       [
-        {text: 'Cancel'},
-        {
-          text: 'Demo Scan',
-          onPress: () => {
-            const demoValue = `SCAN_${Date.now().toString().slice(-4)}`;
-            onChangeText(demoValue);
-            saveToSuggestions(demoValue);
-          },
-        },
+        useAddEdit,
+        isDeleteEnabledInDropdown,
+        openAddEditModal,
+        handleDeleteItem,
+        styles,
       ],
     );
-  }, [hasPermission, requestCameraPermission, onChangeText, saveToSuggestions]);
 
-  const renderValidationIcon = useCallback(() => {
-    if (!showValidationIcon) return null;
+    const ValidationMessage = useCallback(() => {
+      if (!validationMessage || !showValidationIcon) return null;
 
-    switch (validationState) {
-      case 'validating':
-        return (
-          <View style={styles.validationIcon}>
-            <Icon name="sync" size={16} color="#EF652B" />
+      return (
+        <Text style={[styles.validationMessage, {color: validationColor}]}>
+          {validationMessage}
+        </Text>
+      );
+    }, [
+      validationMessage,
+      showValidationIcon,
+      validationColor,
+      styles.validationMessage,
+    ]);
+
+    const AddEditModal = useCallback(
+      () => (
+        <Modal
+          visible={showAddEditModal}
+          transparent
+          animationType="fade"
+          onRequestClose={closeAddEditModal}
+          statusBarTranslucent={true}>
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContainer}>
+              <Text style={styles.modalTitle}>
+                {editingItem ? 'Edit Item' : 'Add New Item'}
+              </Text>
+              <TextInput
+                ref={modalInputRef}
+                style={styles.modalInput}
+                value={newItemText}
+                onChangeText={setNewItemText}
+                placeholder="Enter item name"
+                placeholderTextColor="#999"
+                returnKeyType="done"
+                blurOnSubmit={false}
+                selectTextOnFocus={true}
+              />
+              <View style={styles.modalButtons}>
+                <TouchableOpacity
+                  style={[styles.modalButton, styles.modalButtonCancel]}
+                  onPress={closeAddEditModal}>
+                  <Text style={styles.modalButtonTextCancel}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.modalButton, styles.modalButtonSubmit]}
+                  onPress={handleAddEditSubmit}>
+                  <Text style={styles.modalButtonTextSubmit}>
+                    {editingItem ? 'Update' : 'Add'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
           </View>
-        );
-      case 'valid':
-        return (
-          <View style={styles.validationIcon}>
-            <Icon name="check-circle" size={16} color="#4CAF50" />
+        </Modal>
+      ),
+      [
+        showAddEditModal,
+        editingItem,
+        newItemText,
+        closeAddEditModal,
+        handleAddEditSubmit,
+        styles,
+      ],
+    );
+
+    // Show loading state until initialized
+    if (!isInitialized) {
+      return (
+        <View style={[{width: '100%', marginBottom: tablet ? 25 : 20}, style]}>
+          <Text style={{fontSize: tablet ? 18 : 16, color: '#0E0E0E'}}>
+            {label}
+          </Text>
+          <View
+            style={{
+              height: tablet ? 56 : 48,
+              borderWidth: 1,
+              borderColor: '#D9D9D9',
+              borderRadius: 8,
+              backgroundColor: '#F9F9F9',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}>
+            <Text style={{color: '#999'}}>Loading...</Text>
           </View>
-        );
-      case 'invalid':
-        return (
-          <View style={styles.validationIcon}>
-            <Icon name="error" size={16} color="#F44336" />
-          </View>
-        );
-      default:
-        return null;
+        </View>
+      );
     }
-  }, [showValidationIcon, validationState]);
 
-  // Memoized styles to prevent recreation on every render
-  const styles = useMemo(
-    () =>
-      StyleSheet.create({
-        container: {
-          width: '100%',
-          marginBottom: tablet ? 25 : 20,
-          zIndex: useDropdown && open ? 3000 : 1,
-        },
-        label: {
-          fontSize: tablet ? 18 : 16,
-          fontWeight: '400',
-          marginBottom: 8,
-          color: '#0E0E0E',
-        },
-        inputContainer: {
-          flexDirection: 'row',
-          alignItems: 'center',
-          borderWidth: 1,
-          borderColor: validationColor,
-          borderRadius: 5,
-          backgroundColor: '#fff',
-          position: 'relative',
-        },
-        input: {
-          flex: 1,
-          height: tablet ? 60 : 50,
-          padding: 12,
-          fontSize: tablet ? 17 : 15,
-          fontWeight: '400',
-          color: '#0E0E0E',
-          opacity: editable ? 1 : 0.5,
-        },
-        multilineInput: {
-          height: tablet ? 80 : 70,
-          textAlignVertical: 'top',
-        },
-        scanButton: {
-          padding: 12,
-          justifyContent: 'center',
-          alignItems: 'center',
-        },
-        validationIcon: {
-          paddingHorizontal: 8,
-          justifyContent: 'center',
-          alignItems: 'center',
-        },
-        validationMessage: {
-          fontSize: 12,
-          marginTop: 4,
-          marginLeft: 4,
-        },
-        validationMessageValid: {
-          color: '#4CAF50',
-        },
-        validationMessageInvalid: {
-          color: '#F44336',
-        },
-        suggestionsContainer: {
-          position: 'absolute',
-          top: '100%',
-          left: 0,
-          right: 0,
-          backgroundColor: '#fff',
-          borderWidth: 1,
-          borderColor: '#D9D9D9',
-          borderTopWidth: 0,
-          borderBottomLeftRadius: 5,
-          borderBottomRightRadius: 5,
-          maxHeight: 150,
-          zIndex: 2000,
-          elevation: 5,
-          shadowColor: '#000',
-          shadowOffset: {width: 0, height: 2},
-          shadowOpacity: 0.25,
-          shadowRadius: 3.84,
-        },
-        suggestionItem: {
-          padding: 12,
-          borderBottomWidth: 1,
-          borderBottomColor: '#F0F0F0',
-        },
-        suggestionText: {
-          fontSize: tablet ? 16 : 14,
-          color: '#0E0E0E',
-        },
-        dropdown: {
-          backgroundColor: '#fff',
-          borderWidth: 1,
-          borderColor: validationColor,
-          borderRadius: 5,
-          height: tablet ? 60 : 50,
-        },
-        dropdownDisabled: {
-          backgroundColor: '#F9F9F9',
-          opacity: 0.5,
-        },
-        dropdownLoading: {
-          backgroundColor: '#F5F5F5',
-          borderColor: '#DDD',
-        },
-      }),
-    [tablet, useDropdown, open, validationColor, editable],
-  );
+    // Dropdown render
+    if (useDropdown) {
+      const selectedItem = items.find(item => item.value === value);
 
-  // Suggestions List Component
-  const SuggestionsList = useCallback(() => {
-    if (!showSuggestions || !suggestions.length) return null;
+      // Close dropdown on outside click
+      const handleOutsideClick = () => {
+        if (open) {
+          setOpen(false);
+          globalDropdownOpen = null;
+        }
+      };
 
-    const filteredSuggestions = suggestions.filter(item =>
-      item.toLowerCase().includes(value.toLowerCase()),
-    );
-
-    if (!filteredSuggestions.length) return null;
-
-    return (
-      <View style={styles.suggestionsContainer}>
-        <FlatList
-          data={filteredSuggestions}
-          keyExtractor={(item, index) => `${item}_${index}`}
-          renderItem={({item}) => (
-            <TouchableOpacity
-              style={styles.suggestionItem}
-              onPress={() => selectSuggestion(item)}>
-              <Text style={styles.suggestionText}>{item}</Text>
-            </TouchableOpacity>
+      return (
+        <>
+          {/* Overlay to handle outside clicks */}
+          {open && (
+            <TouchableWithoutFeedback onPress={handleOutsideClick}>
+              <View style={StyleSheet.absoluteFillObject} />
+            </TouchableWithoutFeedback>
           )}
-          nestedScrollEnabled
-        />
-      </View>
-    );
-  }, [showSuggestions, suggestions, value, styles, selectSuggestion]);
 
-  // Validation Message Component
-  const ValidationMessage = useCallback(() => {
-    if (!validationMessage || !showValidationIcon) return null;
+          <View style={[styles.container, style]}>
+            <Text style={styles.label}>{label}</Text>
+            <View style={styles.dropdownWrapper}>
+              <TouchableOpacity
+                style={styles.dropdownButton}
+                onPress={handleDropdownToggle}
+                disabled={!editable}>
+                <Text
+                  style={[
+                    styles.dropdownText,
+                    {color: selectedItem ? '#333' : '#999'},
+                  ]}>
+                  {selectedItem ? selectedItem.label : placeholder}
+                </Text>
+                {/* Add a simple arrow indicator */}
+                <Text
+                  style={{
+                    fontSize: 16,
+                    color: '#666',
+                    transform: [{rotate: open ? '180deg' : '0deg'}],
+                  }}>
+                  ▼
+                </Text>
+              </TouchableOpacity>
 
-    return (
-      <Text
-        style={[
-          styles.validationMessage,
-          validationState === 'valid'
-            ? styles.validationMessageValid
-            : styles.validationMessageInvalid,
-        ]}>
-        {validationMessage}
-      </Text>
-    );
-  }, [validationMessage, showValidationIcon, validationState, styles]);
+              {open && (
+                <TouchableWithoutFeedback onPress={e => e.stopPropagation()}>
+                  <View style={styles.dropdownList}>
+                    <FlatList
+                      data={items}
+                      keyExtractor={item => item.value.toString()}
+                      renderItem={({item, index}) => (
+                        <TouchableOpacity
+                          style={[
+                            styles.dropdownItem,
+                            index === items.length - 1 &&
+                              styles.lastDropdownItem,
+                            item.value === value && styles.selectedItem,
+                          ]}
+                          onPress={() => {
+                            if (onChangeTextRef.current) {
+                              onChangeTextRef.current(item.value);
+                            }
+                            setOpen(false);
+                            globalDropdownOpen = null;
+                          }}>
+                          <Text style={styles.dropdownItemText}>
+                            {item.label}
+                          </Text>
+                        </TouchableOpacity>
+                      )}
+                      nestedScrollEnabled={true}
+                    />
+                  </View>
+                </TouchableWithoutFeedback>
+              )}
+            </View>
+            <ValidationMessage />
+          </View>
+        </>
+      );
+    }
 
-  // Dropdown Component
-  if (useDropdown) {
+    // Regular input render
     return (
       <View style={[styles.container, style]}>
         <Text style={styles.label}>{label}</Text>
-        <DropDownPicker
-          open={open}
-          value={value}
-          items={items}
-          setOpen={setOpen}
-          setValue={onChangeText}
-          setItems={setItems}
-          disabled={!editable}
-          placeholder={placeholder}
-          style={[
-            styles.dropdown,
-            !editable && styles.dropdownDisabled,
-            inputStyle,
-          ]}
-          containerStyle={{marginBottom: open ? 100 : 0}}
-          zIndex={3000}
-          zIndexInverse={1000}
-          dropDownContainerStyle={{
-            borderColor: validationColor,
-          }}
-          {...props}
-        />
+        <View style={styles.inputContainer}>
+          <TextInput
+            ref={inputRef}
+            style={[
+              styles.input,
+              multiline && styles.multilineInput,
+              inputStyle,
+            ]}
+            value={value}
+            onChangeText={handleInputChange}
+            placeholder={placeholder}
+            placeholderTextColor="#999"
+            editable={editable}
+            multiline={multiline}
+            numberOfLines={multiline ? 3 : 1}
+            {...props}
+          />
+          {renderValidationIcon()}
+        </View>
         <ValidationMessage />
       </View>
     );
-  }
+  },
+);
 
-  // Regular Input Component
-  return (
-    <View style={[styles.container, style]}>
-      <Text style={styles.label}>{label}</Text>
-      <View style={styles.inputContainer}>
-        <TextInput
-          ref={inputRef}
-          style={[styles.input, multiline && styles.multilineInput, inputStyle]}
-          value={value}
-          onChangeText={handleInputChange}
-          onFocus={() => {
-            if (storageKey && suggestions.length > 0) {
-              setShowSuggestions(true);
-            }
-          }}
-          onBlur={handleInputBlur}
-          placeholder={placeholder}
-          placeholderTextColor="#999"
-          editable={editable}
-          multiline={multiline}
-          numberOfLines={multiline ? 2 : 1}
-          {...props}
-        />
-        {renderValidationIcon()}
-        {scannable && editable && (
-          <TouchableOpacity style={styles.scanButton} onPress={openCamera}>
-            <Icon name="qr-code-scanner" size={24} color="#EF652B" />
-          </TouchableOpacity>
-        )}
-      </View>
-
-      <ValidationMessage />
-      <SuggestionsList />
-    </View>
-  );
-};
+// Add display name for debugging
+DynamicInputField.displayName = 'DynamicInputField';
 
 export default DynamicInputField;

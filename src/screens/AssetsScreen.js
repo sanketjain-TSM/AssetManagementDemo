@@ -1,3 +1,4 @@
+// Modified AssetScreen with responsive styling support for tablets and mobiles
 import React, {useState, useRef, useEffect} from 'react';
 import {
   View,
@@ -45,7 +46,7 @@ export default function AssetsScreen() {
     try {
       const token = await AsyncStorage.getItem('token');
       const response = await axios.post(
-        'http://34.57.92.8:8000/v1/assets/assetsList',
+        'https://api.matorg.com/v1/assets/assetsList',
         {location: '', description: ''},
         {headers: {Authorization: `Bearer ${token}`}},
       );
@@ -179,7 +180,7 @@ const paddingSize = isTablet ? 24 : 16;
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#ffffff',
   },
   container: {
     flex: 1,

@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   Platform,
   TouchableNativeFeedback,
+  Modal,
 } from 'react-native';
 import Collapsible from 'react-native-collapsible';
 import axios from 'axios';
@@ -77,9 +78,17 @@ const styles = StyleSheet.create({
     padding: scaleSize(16),
   },
   assetDetailsContainer: {
+    width: '100%',
     justifyContent: 'space-between',
     marginBottom: 5,
     backgroundColor: '#F9F9F9',
+    paddingTop: 5,
+  },
+  assetDetailsTouchable: {
+    width: '92%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     paddingTop: 5,
   },
   assetDetailValue: {
@@ -87,8 +96,6 @@ const styles = StyleSheet.create({
     fontSize: scaleSize(14),
     fontWeight: '600',
     fontFamily: 'Roboto',
-    marginLeft: scaleSize(10),
-    marginTop: scaleSize(4),
   },
   assetInfoContainer: {
     borderRadius: 5,
@@ -97,7 +104,7 @@ const styles = StyleSheet.create({
   assetInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    width: '100%',
+    width: '92%',
     paddingLeft: scaleSize(10),
     paddingRight: scaleSize(10),
     marginBottom: scaleSize(5),
@@ -106,14 +113,13 @@ const styles = StyleSheet.create({
     fontSize: scaleSize(14),
     opacity: 0.5,
     marginVertical: scaleSize(4),
-    width: isTablet ? 180 : 140,
   },
   infoValue: {
     fontSize: scaleSize(14),
     color: '#0E0E0E',
     fontWeight: '600',
     marginVertical: scaleSize(3),
-    marginLeft: scaleSize(10),
+    marginLeft: isTablet ? scaleSize(10) : scaleSize(1),
     width: isTablet ? 180 : 130,
   },
   modelRow: {
@@ -187,10 +193,84 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   arrowIcon: {
-    width: scaleSize(9),
     height: scaleSize(8),
-    marginLeft: scaleSize(70),
-    marginTop: scaleSize(8),
+  },
+  menuIcon: {
+    width: scaleSize(20),
+    height: scaleSize(20),
+  },
+  iconsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: scaleSize(10),
+  },
+  // Modal styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 10,
+    padding: scaleSize(20),
+    width: scaleSize(280),
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  modalTitle: {
+    fontSize: scaleSize(18),
+    fontWeight: '600',
+    textAlign: 'center',
+    marginBottom: scaleSize(20),
+    color: '#242424',
+  },
+  modalOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: scaleSize(15),
+    paddingHorizontal: scaleSize(10),
+    borderRadius: 8,
+    marginBottom: scaleSize(10),
+  },
+  editOption: {
+    backgroundColor: '#E3F2FD',
+  },
+  deleteOption: {
+    backgroundColor: '#FFEBEE',
+  },
+  modalOptionText: {
+    fontSize: scaleSize(16),
+    fontWeight: '500',
+    marginLeft: scaleSize(10),
+  },
+  editText: {
+    color: '#1976D2',
+  },
+  deleteText: {
+    color: '#D32F2F',
+  },
+  cancelButton: {
+    backgroundColor: '#F5F5F5',
+    paddingVertical: scaleSize(12),
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: scaleSize(10),
+  },
+  cancelButtonText: {
+    fontSize: scaleSize(16),
+    color: '#666',
+    fontWeight: '500',
+  },
+  modalIcon: {
+    fontSize: scaleSize(20),
   },
 });
 
@@ -204,7 +284,12 @@ const AssetDetailsScreen = ({route}) => {
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
 
+  // Modal state
+  const [showMenuModal, setShowMenuModal] = useState(false);
+  const [selectedAsset, setSelectedAsset] = useState(null);
+
   const navigation = useNavigation();
+
   useEffect(() => {
     fetchAssets();
   }, []);
@@ -216,7 +301,7 @@ const AssetDetailsScreen = ({route}) => {
     try {
       const token = await AsyncStorage.getItem('token');
       const response = await axios.get(
-        `http://34.57.92.8:8000/v1/assets/description/all?description=${encodeURIComponent(
+        `http://api.matorg.com:8000/v1/assets/description/all?description=${encodeURIComponent(
           asset?.description,
         )}&skip=${skip}&limit=${limit}`,
         {
@@ -238,30 +323,6 @@ const AssetDetailsScreen = ({route}) => {
       setLoading(false);
     }
   };
-
-  // useEffect(() => {
-  //   if (devices.length === 0) return;
-
-  //   // Create a Map for fast lookups
-  //   // const deviceMap = new Map(
-  //   //   devices.map((device) => [device.id, device.rssi])
-  //   // );
-
-  //   const deviceMap = syncDevicesWithAssets(devices);
-
-  //   // Update the assets list with the new RSSI values
-  //   // setAssetsList((prevAssetsList) =>
-  //   //   prevAssetsList.map((asset) => {
-  //   //     if (deviceMap.has(asset.deviceId)) {
-  //   //       return {
-  //   //         ...asset,
-  //   //         rssi: deviceMap.get(asset.deviceId),
-  //   //       };
-  //   //     }
-  //   //     return asset;
-  //   //   })
-  //   // );
-  // }, [JSON.stringify(devices)]);
 
   function ordinalSuffixOf(i) {
     if (i?.toLowerCase() === 'notinzone') {
@@ -289,17 +350,85 @@ const AssetDetailsScreen = ({route}) => {
     }));
   };
 
+  const handleMenuPress = item => {
+    setSelectedAsset(item);
+    setShowMenuModal(true);
+  };
+
+  const handleEditAsset = () => {
+    setShowMenuModal(false);
+    if (selectedAsset) {
+      // Navigate to AddAsset screen in edit mode
+      navigation.navigate('AddAssetScreen', {
+        mode: 'edit',
+        assetId: selectedAsset.tagNumber,
+        assetData: selectedAsset,
+      });
+    }
+  };
+
+  const handleDeleteAsset = () => {
+    setShowMenuModal(false);
+    if (selectedAsset) {
+      Alert.alert(
+        'Delete Asset',
+        `Are you sure you want to delete asset ${selectedAsset.tagNumber}?`,
+        [
+          {
+            text: 'Cancel',
+            style: 'cancel',
+          },
+          {
+            text: 'Delete',
+            style: 'destructive',
+            onPress: () => deleteAsset(selectedAsset),
+          },
+        ],
+      );
+    }
+  };
+
+  const deleteAsset = async assetToDelete => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+
+      // Replace with your actual delete API endpoint
+      await axios.delete(
+        `https://api.matorg.com/v1/assets/delete-asset/${assetToDelete?.id}`,
+        {}, 
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      // Remove the asset from the local list
+      setAssetsList(prevList =>
+        prevList.filter(item => item.id !== assetToDelete.id),
+      );
+
+      Alert.alert('Success', 'Asset deleted successfully.');
+    } catch (error) {
+      console.error('Delete asset error:', error);
+      Alert.alert('Error', 'Failed to delete asset. Please try again.');
+    }
+  };
+
   const renderAssetItem = ({item, index}) => {
     const {formattedDate, formattedTime} = formatDateTime(item.lastSeenTime);
 
     return (
       <View key={index} style={styles.assetContainer}>
         <View style={styles.assetDetailsContainer}>
-          <TouchableOpacity onPress={() => toggleCollapse(index)}>
+          <TouchableOpacity
+            onPress={() => toggleCollapse(index)}
+            style={styles.assetDetailsTouchable}>
             <View style={styles.assetInfo}>
-              <Text style={styles.infoLabel}>Asset ID</Text>
-              <Text></Text>
-              <Text style={styles.assetDetailValue}>: {item.tagNumber}</Text>
+              <Text style={styles.infoLabel}>Asset ID : </Text>
+              <Text style={styles.assetDetailValue}>{item.tagNumber}</Text>
+            </View>
+            <View style={styles.iconsContainer}>
               <Image
                 source={require('../../assets/images/downarrow.png')}
                 style={[
@@ -311,32 +440,38 @@ const AssetDetailsScreen = ({route}) => {
                   },
                 ]}
               />
+              <TouchableOpacity onPress={() => handleMenuPress(item)}>
+                <Image
+                  source={require('../../assets/images/menu-vertical.png')}
+                  style={styles.menuIcon}
+                />
+              </TouchableOpacity>
             </View>
           </TouchableOpacity>
 
           <Collapsible collapsed={!collapsedStates[index]}>
             <View style={styles.assetInfoContainer}>
               <View style={styles.assetInfo}>
-                <Text style={styles.infoLabel}>Chorus ID</Text>
-                <Text style={styles.infoValue}>: {item.deviceId?.trim()}</Text>
+                <Text style={styles.infoLabel}>Chorus ID : </Text>
+                <Text style={styles.infoValue}>{item.deviceId?.trim()}</Text>
               </View>
               <View style={styles.assetInfo}>
-                <Text style={styles.infoLabel}>Model Number</Text>
-                <Text style={styles.infoValue}>: {item.modelNumber}</Text>
+                <Text style={styles.infoLabel}>Model Number : </Text>
+                <Text style={styles.infoValue}>{item.modelNumber}</Text>
               </View>
 
               <View style={styles.assetInfo}>
-                <Text style={styles.infoLabel}>Manufacturer</Text>
+                <Text style={styles.infoLabel}>Manufacturer : </Text>
                 <Text
                   ellipsizeMode="tail"
                   numberOfLines={1}
                   style={styles.infoValue}>
-                  : {item.manufacturer}
+                  {item.manufacturer}
                 </Text>
               </View>
               <View style={styles.assetInfo}>
-                <Text style={styles.infoLabel}>Zone</Text>
-                <Text style={styles.infoValue}>: {item.zoneId}</Text>
+                <Text style={styles.infoLabel}>Zone : </Text>
+                <Text style={styles.infoValue}>{item.zoneId}</Text>
               </View>
             </View>
           </Collapsible>
@@ -356,7 +491,6 @@ const AssetDetailsScreen = ({route}) => {
             </Text>
           </View>
           <View style={styles.rssiContainer}>
-            {/* {<SignalStrengthMeter rssi={item.deviceId?.trim()} />} */}
             {<SixBarIndicatorSignalmeter rssi={item.deviceId?.trim()} />}
           </View>
           <View style={styles.locationInfo}>
@@ -419,6 +553,52 @@ const AssetDetailsScreen = ({route}) => {
           loading ? <ActivityIndicator size="large" color="#EF652B" /> : null
         }
       />
+
+      {/* Menu Modal */}
+      <Modal
+        visible={showMenuModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowMenuModal(false)}>
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setShowMenuModal(false)}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>Asset Options</Text>
+
+            <TouchableOpacity
+              style={[styles.modalOption, styles.editOption]}
+              onPress={handleEditAsset}>
+              <Icon
+                name="create-outline"
+                style={[styles.modalIcon, styles.editText]}
+              />
+              <Text style={[styles.modalOptionText, styles.editText]}>
+                Edit Asset
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.modalOption, styles.deleteOption]}
+              onPress={handleDeleteAsset}>
+              <Icon
+                name="trash-outline"
+                style={[styles.modalIcon, styles.deleteText]}
+              />
+              <Text style={[styles.modalOptionText, styles.deleteText]}>
+                Delete Asset
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.cancelButton}
+              onPress={() => setShowMenuModal(false)}>
+              <Text style={styles.cancelButtonText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 };

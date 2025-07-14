@@ -47,7 +47,7 @@ export default function GroundTruth({item}) {
     try {
       const token = await AsyncStorage.getItem('token');
       const response = await axios.post(
-        'http://34.57.92.8:8000/v1/feedback',
+        'https://api.matorg.com/v1/feedback',
         {
           deviceId: item?.deviceId,
           zone: item?.zoneId,

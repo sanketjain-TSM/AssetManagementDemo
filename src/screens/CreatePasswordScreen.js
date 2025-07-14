@@ -58,7 +58,7 @@ const CreatePasswordScreen = () => {
     try {
       const token = await AsyncStorage.getItem('token');
       const response = await axios.post(
-        'http://34.57.92.8:8000/v1/auth/initPassword',
+        'https://api.matorg.com/v1/auth/initPassword',
         {
           password: password,
         },
@@ -113,7 +113,9 @@ const CreatePasswordScreen = () => {
           ? heightPercentageToDP(15)
           : heightPercentageToDP(8)
         : 180,
-      marginBottom: tablet ? heightPercentageToDP(20) : 50,
+      marginBottom: tablet
+        ? heightPercentageToDP(20)
+        : heightPercentageToDP(18),
       transform: tablet ? [{scale: landscape ? 1.2 : 1.5}] : [{scale: 1}],
       alignSelf: 'flex-start',
     },

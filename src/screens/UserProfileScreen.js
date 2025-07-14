@@ -74,7 +74,7 @@ export default function UserProfileScreen() {
   const fetchOrgList = async () => {
     try {
       const token = await AsyncStorage.getItem('token');
-      const response = await axios.get('http://34.57.92.8:8000/v1/user/orgs', {
+      const response = await axios.get('https://api.matorg.com/v1/user/orgs', {
         headers: {Authorization: `Bearer ${token}`},
       });
       if (response.status === 200) {
@@ -93,7 +93,7 @@ export default function UserProfileScreen() {
     try {
       const token = await AsyncStorage.getItem('token');
       const response = await axios.patch(
-        'http://34.57.92.8:8000/v1/auth/user/update',
+        'https://api.matorg.com/v1/auth/user/update',
         {
           firstName,
           lastName,

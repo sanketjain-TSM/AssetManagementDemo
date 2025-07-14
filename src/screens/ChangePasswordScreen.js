@@ -35,7 +35,6 @@ const ChangePasswordScreen = () => {
     setLoading(true);
 
     try {
-      // Validate that both password fields are filled in
       if (!newPassword || !confirmPassword) {
         Alert.alert('Error', 'Please fill in all fields.');
         return;
@@ -49,7 +48,7 @@ const ChangePasswordScreen = () => {
       const token = await AsyncStorage.getItem('token');
 
       const response = await axios.post(
-        'http://34.57.92.8:8000/v1/user/changePassword',
+        'https://api.matorg.com/v1/user/changePassword',
         {newPassword: newPassword},
         {headers: {Authorization: `Bearer ${token}`}},
       );

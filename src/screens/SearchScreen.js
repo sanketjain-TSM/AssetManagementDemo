@@ -38,7 +38,7 @@ const SearchScreen = () => {
       const token = await AsyncStorage.getItem('token');
       const userId = await AsyncStorage.getItem('savedEmail');
       const response = await axios.post(
-        `http://34.57.92.8:8000/v1/assets/search`,
+        `https://api.matorg.com/v1/assets/search`,
         {searchQuery: query},
         {headers: {Authorization: `Bearer ${token}`}},
       );

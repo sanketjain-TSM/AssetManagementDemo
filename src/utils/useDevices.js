@@ -408,7 +408,7 @@ const useDevices = () => {
     });
     axios
       .post(
-        `http://34.57.92.8:8000/v1/assets/bluetooth/log`,
+        `https://api.matorg.com/v1/assets/bluetooth/log`,
         {
           assetID: deviceWithLocation?.macAddressString,
           RSSI: deviceWithLocation?.rssi,

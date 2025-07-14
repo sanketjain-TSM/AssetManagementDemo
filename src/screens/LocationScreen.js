@@ -199,7 +199,7 @@ const LocationScreen = () => {
     const token = await AsyncStorage.getItem('token');
     try {
       const response = await axios.get(
-        'http://34.57.92.8:8000/v1/assets/floor/all',
+        'https://api.matorg.com/v1/assets/floor/all',
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -222,7 +222,7 @@ const LocationScreen = () => {
     const token = await AsyncStorage.getItem('token');
     try {
       const response = await axios.get(
-        `http://34.57.92.8:8000/v1/assets/floor/${floor}`,
+        `https://api.matorg.com/v1/assets/floor/${floor}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -246,7 +246,7 @@ const LocationScreen = () => {
     const token = await AsyncStorage.getItem('token');
     try {
       const response = await axios.get(
-        `http://34.57.92.8:8000/v1/assets/floor/${selectedFloor}/${encodeURIComponent(
+        `https://api.matorg.com/v1/assets/floor/${selectedFloor}/${encodeURIComponent(
           department.department,
         )}/${department.zoneId}`,
         {

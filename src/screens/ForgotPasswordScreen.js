@@ -56,7 +56,7 @@ const ForgotPasswordScreen = () => {
     setLoading(true);
     try {
       const response = await axios.post(
-        'http://34.57.92.8:8000/v1/auth/forgotPassword',
+        'https://api.matorg.com/v1/auth/forgotPassword',
         {email: email.toLowerCase()},
       );
       if (response.status === 200) {
