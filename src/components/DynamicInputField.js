@@ -55,13 +55,12 @@ const createStyles = (
       paddingHorizontal: 12,
       paddingVertical: 8,
       marginRight: 8,
-      backgroundColor: '#EF652B',
       borderRadius: 6,
       justifyContent: 'center',
       alignItems: 'center',
     },
     qrScanButtonText: {
-      color: '#fff',
+      color: '#0E0E0E',
       fontSize: 12,
       fontWeight: '500',
     },
@@ -844,7 +843,7 @@ const DynamicInputField = React.memo(
               style={styles.qrScanButton}
               onPress={openQRScanner}
               disabled={!editable}>
-              <Icon name="qr-code-scanner" size={16} color="#fff" />
+              <Icon name="qr-code-scanner" size={16} color="#0E0E0E" />
             </TouchableOpacity>
           )}
         </View>
