@@ -16,7 +16,7 @@ import {
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import DropDownPicker from 'react-native-dropdown-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import QRScannerModal from './QRScannerModal';
+import ModernQRScannerModal from './ModernQRScannerModal';
 
 const {width: screenWidth, height: screenHeight} = Dimensions.get('window');
 const isTablet = () => screenWidth >= 768 && screenHeight / screenWidth < 1.6;
@@ -481,13 +481,15 @@ const DynamicInputField = React.memo(
       }
     }, []); // Empty dependency array makes this stable
 
-    const handleQRScan = useCallback((scannedData) => {
+    const handleQRScan = useCallback(scannedData => {
+      console.log('QR Scan result:', scannedData);
       if (onChangeTextRef.current) {
         onChangeTextRef.current(scannedData);
       }
     }, []);
 
     const openQRScanner = useCallback(() => {
+      console.log('QR Scanner button pressed');
       setShowQRScanner(true);
     }, []);
 
@@ -820,14 +822,6 @@ const DynamicInputField = React.memo(
       <View style={[styles.container, style]}>
         <Text style={styles.label}>{label}</Text>
         <View style={styles.inputContainer}>
-          {enableQRScan && (
-            <TouchableOpacity
-              style={styles.qrScanButton}
-              onPress={openQRScanner}
-              disabled={!editable}>
-              <Icon name="qr-code-scanner" size={16} color="#fff" />
-            </TouchableOpacity>
-          )}
           <TextInput
             ref={inputRef}
             style={[
@@ -845,12 +839,20 @@ const DynamicInputField = React.memo(
             {...props}
           />
           {renderValidationIcon()}
+          {enableQRScan && (
+            <TouchableOpacity
+              style={styles.qrScanButton}
+              onPress={openQRScanner}
+              disabled={!editable}>
+              <Icon name="qr-code-scanner" size={16} color="#fff" />
+            </TouchableOpacity>
+          )}
         </View>
         <ValidationMessage />
-        
+
         {/* QR Scanner Modal */}
         {enableQRScan && (
-          <QRScannerModal
+          <ModernQRScannerModal
             visible={showQRScanner}
             onClose={closeQRScanner}
             onScan={handleQRScan}

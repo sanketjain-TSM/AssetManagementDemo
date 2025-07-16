@@ -822,7 +822,7 @@ export default function AddAssetScreen() {
   const saveAsset = async (assetData, isEdit = false) => {
     try {
       const token = await AsyncStorage.getItem('token');
-  
+
       if (isEdit) {
         const response = await axios.post(
           `${BASE_URL}/assets/update-asset/${editAssetId}`,
@@ -836,7 +836,7 @@ export default function AddAssetScreen() {
           assetData,
           {headers: {Authorization: `Bearer ${token}`}},
         );
-        console.log(response,"save response")
+        console.log(response, 'save response');
         return response;
       }
     } catch (error) {
@@ -877,7 +877,7 @@ export default function AddAssetScreen() {
   const handleSaveAsset = async () => {
     Keyboard.dismiss();
     console.log(assetDescription, 'Asset Description');
-  
+
     // Validation
     if (!deviceId.trim()) {
       Alert.alert('Error', 'Please enter a Device ID.');
@@ -903,7 +903,7 @@ export default function AddAssetScreen() {
       Alert.alert('Error', 'Last Known Location is required.');
       return;
     }
-  
+
     setLoading(true);
     try {
       const assetDataToSave = {
@@ -913,10 +913,10 @@ export default function AddAssetScreen() {
         zone: zone.trim(),
         lastKnownLocation: lastKnownLocation.trim(),
       };
-  
+
       console.log('Save asset response:', assetDataToSave);
       const response = await saveAsset(assetDataToSave, isEditMode);
-      console.log(response,"response")
+      console.log(response, 'response');
       if (response.status === 200 || response.status === 201) {
         const message =
           response.data?.message ||
@@ -949,10 +949,12 @@ export default function AddAssetScreen() {
     } catch (error) {
       console.error('Save asset error:', error);
       console.error('Error response:', error.response?.data);
-      
+
       // Extract error message from API response
-      let errorMessage = `Failed to ${isEditMode ? 'update' : 'add'} asset. Please try again.`;
-      
+      let errorMessage = `Failed to ${
+        isEditMode ? 'update' : 'add'
+      } asset. Please try again.`;
+
       if (error.response?.data?.error?.message) {
         // For the structure: { error: { message: "Asset already exists" } }
         errorMessage = error.response.data.error.message;
@@ -963,7 +965,7 @@ export default function AddAssetScreen() {
         // For general error messages (but not network errors)
         errorMessage = error.message;
       }
-      
+
       Alert.alert('Error', errorMessage);
     } finally {
       setLoading(false);

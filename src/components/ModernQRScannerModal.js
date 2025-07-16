@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useRef} from 'react';
 import {
   StyleSheet,
   View,
@@ -11,14 +11,13 @@ import {
   PermissionsAndroid,
   StatusBar,
 } from 'react-native';
-import QRCodeScanner from 'react-native-qrcode-scanner';
 import {RNCamera} from 'react-native-camera';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
 const {width: screenWidth, height: screenHeight} = Dimensions.get('window');
 const isTablet = () => screenWidth >= 768 && screenHeight / screenWidth < 1.6;
 
-const QRScannerModal = ({
+const ModernQRScannerModal = ({
   visible,
   onClose,
   onScan,
@@ -28,6 +27,7 @@ const QRScannerModal = ({
   const [hasPermission, setHasPermission] = useState(null);
   const [scanned, setScanned] = useState(false);
   const [cameraError, setCameraError] = useState(false);
+  const cameraRef = useRef(null);
   const tablet = isTablet();
 
   useEffect(() => {
@@ -39,6 +39,7 @@ const QRScannerModal = ({
   }, [visible]);
 
   const requestCameraPermission = async () => {
+    console.log('Requesting camera permission...');
     if (Platform.OS === 'android') {
       try {
         const granted = await PermissionsAndroid.request(
@@ -51,9 +52,12 @@ const QRScannerModal = ({
             buttonPositive: 'OK',
           },
         );
+        console.log('Permission result:', granted);
         if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+          console.log('Camera permission granted');
           setHasPermission(true);
         } else {
+          console.log('Camera permission denied');
           setHasPermission(false);
           Alert.alert(
             'Permission Denied',
@@ -61,23 +65,26 @@ const QRScannerModal = ({
           );
         }
       } catch (err) {
-        console.warn(err);
+        console.warn('Permission request error:', err);
         setHasPermission(false);
       }
     } else {
       // iOS permissions are handled by the library
+      console.log('iOS - setting permission to true');
       setHasPermission(true);
     }
   };
 
-  const handleSuccess = e => {
+  const handleBarCodeRead = event => {
     if (scanned) return; // Prevent multiple scans
-    
+
+    console.log('Barcode detected:', event);
     setScanned(true);
-    const scannedData = e.data;
-    
+    const scannedData = event.data;
+
     // Validate the scanned data
     if (scannedData && scannedData.trim()) {
+      console.log('Valid QR code scanned:', scannedData);
       onScan(scannedData.trim());
       onClose();
     } else {
@@ -86,10 +93,13 @@ const QRScannerModal = ({
     }
   };
 
-  const handleError = error => {
-    console.log('QR Scanner Error:', error);
+  const handleCameraError = error => {
+    console.log('Camera Error:', error);
     setCameraError(true);
-    Alert.alert('Scanner Error', 'Failed to initialize camera. Please try again.');
+    Alert.alert(
+      'Scanner Error',
+      'Failed to initialize camera. Please try again.',
+    );
   };
 
   const handleCameraReady = () => {
@@ -274,7 +284,10 @@ const QRScannerModal = ({
             <Text style={styles.permissionButtonText}>Grant Permission</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.permissionButton, {marginTop: 15, backgroundColor: '#666'}]}
+            style={[
+              styles.permissionButton,
+              {marginTop: 15, backgroundColor: '#666'},
+            ]}
             onPress={onClose}>
             <Text style={styles.permissionButtonText}>Cancel</Text>
           </TouchableOpacity>
@@ -301,7 +314,10 @@ const QRScannerModal = ({
             <Text style={styles.retryButtonText}>Retry</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.retryButton, {marginTop: 15, backgroundColor: '#666'}]}
+            style={[
+              styles.retryButton,
+              {marginTop: 15, backgroundColor: '#666'},
+            ]}
             onPress={onClose}>
             <Text style={styles.retryButtonText}>Cancel</Text>
           </TouchableOpacity>
@@ -326,25 +342,28 @@ const QRScannerModal = ({
 
         {/* Scanner */}
         <View style={styles.scannerContainer}>
-          <QRCodeScanner
-            onRead={handleSuccess}
+          <RNCamera
+            ref={cameraRef}
+            style={styles.cameraContainer}
+            type={RNCamera.Constants.Type.back}
             flashMode={RNCamera.Constants.FlashMode.auto}
-            reactivate={true}
-            reactivateTimeout={2000}
-            showMarker={false}
-            cameraStyle={styles.cameraContainer}
-            containerStyle={styles.scannerContainer}
-            cameraProps={{
-              onMountError: handleError,
-              onCameraReady: handleCameraReady,
-              type: RNCamera.Constants.Type.back,
-              captureAudio: false,
+            onBarCodeRead={handleBarCodeRead}
+            onMountError={handleCameraError}
+            onCameraReady={handleCameraReady}
+            captureAudio={false}
+            androidCameraPermissionOptions={{
+              title: 'Camera Permission',
+              message: 'This app needs camera access to scan QR codes',
+              buttonPositive: 'OK',
+              buttonNegative: 'Cancel',
             }}
-            fadeIn={true}
-            checkAndroid6Permissions={true}
-            permissionDialogTitle="Camera Permission"
-            permissionDialogMessage="This app needs camera access to scan QR codes"
-            buttonPositive="OK"
+            barCodeTypes={[
+              RNCamera.Constants.BarCodeType.qr,
+              RNCamera.Constants.BarCodeType.code128,
+              RNCamera.Constants.BarCodeType.code39,
+              RNCamera.Constants.BarCodeType.ean13,
+              RNCamera.Constants.BarCodeType.ean8,
+            ]}
           />
 
           {/* Custom overlay */}
@@ -367,4 +386,4 @@ const QRScannerModal = ({
   );
 };
 
-export default QRScannerModal; 
+export default ModernQRScannerModal;
