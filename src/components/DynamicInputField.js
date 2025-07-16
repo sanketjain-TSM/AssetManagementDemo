@@ -16,6 +16,7 @@ import {
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import DropDownPicker from 'react-native-dropdown-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import QRScannerModal from './QRScannerModal';
 
 const {width: screenWidth, height: screenHeight} = Dimensions.get('window');
 const isTablet = () => screenWidth >= 768 && screenHeight / screenWidth < 1.6;
@@ -49,6 +50,20 @@ const createStyles = (
       borderRadius: 8,
       backgroundColor: '#fff',
       position: 'relative',
+    },
+    qrScanButton: {
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      marginRight: 8,
+      backgroundColor: '#EF652B',
+      borderRadius: 6,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    qrScanButtonText: {
+      color: '#fff',
+      fontSize: 12,
+      fontWeight: '500',
     },
     input: {
       flex: 1,
@@ -275,6 +290,9 @@ const DynamicInputField = React.memo(
     validationMessage,
     showValidationIcon = false,
     onDropdownItemsChange,
+    enableQRScan = false,
+    qrScanTitle = 'Scan QR Code',
+    qrScanSubtitle = 'Position the QR code within the frame',
     ...props
   }) => {
     const [open, setOpen] = useState(false);
@@ -283,6 +301,7 @@ const DynamicInputField = React.memo(
     const [editingItem, setEditingItem] = useState(null);
     const [newItemText, setNewItemText] = useState('');
     const [isInitialized, setIsInitialized] = useState(false);
+    const [showQRScanner, setShowQRScanner] = useState(false);
 
     const inputRef = useRef(null);
     const modalInputRef = useRef(null);
@@ -461,6 +480,20 @@ const DynamicInputField = React.memo(
         onChangeTextRef.current(text);
       }
     }, []); // Empty dependency array makes this stable
+
+    const handleQRScan = useCallback((scannedData) => {
+      if (onChangeTextRef.current) {
+        onChangeTextRef.current(scannedData);
+      }
+    }, []);
+
+    const openQRScanner = useCallback(() => {
+      setShowQRScanner(true);
+    }, []);
+
+    const closeQRScanner = useCallback(() => {
+      setShowQRScanner(false);
+    }, []);
 
     const openAddEditModal = useCallback((item = null) => {
       setEditingItem(item);
@@ -787,6 +820,14 @@ const DynamicInputField = React.memo(
       <View style={[styles.container, style]}>
         <Text style={styles.label}>{label}</Text>
         <View style={styles.inputContainer}>
+          {enableQRScan && (
+            <TouchableOpacity
+              style={styles.qrScanButton}
+              onPress={openQRScanner}
+              disabled={!editable}>
+              <Icon name="qr-code-scanner" size={16} color="#fff" />
+            </TouchableOpacity>
+          )}
           <TextInput
             ref={inputRef}
             style={[
@@ -806,6 +847,17 @@ const DynamicInputField = React.memo(
           {renderValidationIcon()}
         </View>
         <ValidationMessage />
+        
+        {/* QR Scanner Modal */}
+        {enableQRScan && (
+          <QRScannerModal
+            visible={showQRScanner}
+            onClose={closeQRScanner}
+            onScan={handleQRScan}
+            title={qrScanTitle}
+            subtitle={qrScanSubtitle}
+          />
+        )}
       </View>
     );
   },

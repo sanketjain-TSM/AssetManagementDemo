@@ -1091,6 +1091,9 @@ export default function AddAssetScreen() {
               validationState={getDeviceIdValidationState()}
               validationMessage={deviceIdMessage}
               showValidationIcon={true}
+              enableQRScan={true}
+              qrScanTitle="Scan Device ID"
+              qrScanSubtitle="Position the device ID QR code within the frame"
             />
 
             <DynamicInputField
@@ -1099,6 +1102,9 @@ export default function AddAssetScreen() {
               onChangeText={setAssetId}
               placeholder="Scan barcode or QR code"
               storageKey="assetId"
+              enableQRScan={true}
+              qrScanTitle="Scan Asset ID"
+              qrScanSubtitle="Position the asset ID QR code within the frame"
             />
 
             <EnhancedDropdown
