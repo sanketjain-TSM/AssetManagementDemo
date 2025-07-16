@@ -96,7 +96,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingTop: 5,
   },
   assetDetailValue: {
     color: '#0E0E0E',
@@ -210,6 +209,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: scaleSize(10),
+    marginBottom: scaleSize(5),
   },
   // Modal styles
   modalOverlay: {

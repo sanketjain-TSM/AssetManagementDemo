@@ -86,10 +86,11 @@ const styles = StyleSheet.create({
   },
   assetDetailsTouchable: {
     width: '92%',
+    // backgroundColor: 'teal',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingTop: 5,
+    // paddingTop: 5,
   },
   assetDetailValue: {
     color: '#0E0E0E',
@@ -202,7 +203,9 @@ const styles = StyleSheet.create({
   iconsContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: scaleSize(10),
+    marginBottom: scaleSize(5),
   },
   // Modal styles
   modalOverlay: {
