@@ -9,6 +9,7 @@ import {
   Dimensions,
   Platform,
   PermissionsAndroid,
+  StatusBar,
 } from 'react-native';
 import QRCodeScanner from 'react-native-qrcode-scanner';
 import {RNCamera} from 'react-native-camera';
@@ -26,12 +27,14 @@ const QRScannerModal = ({
 }) => {
   const [hasPermission, setHasPermission] = useState(null);
   const [scanned, setScanned] = useState(false);
+  const [cameraError, setCameraError] = useState(false);
   const tablet = isTablet();
 
   useEffect(() => {
     if (visible) {
       requestCameraPermission();
       setScanned(false);
+      setCameraError(false);
     }
   }, [visible]);
 
@@ -85,7 +88,13 @@ const QRScannerModal = ({
 
   const handleError = error => {
     console.log('QR Scanner Error:', error);
-    Alert.alert('Scanner Error', 'Failed to scan QR code. Please try again.');
+    setCameraError(true);
+    Alert.alert('Scanner Error', 'Failed to initialize camera. Please try again.');
+  };
+
+  const handleCameraReady = () => {
+    console.log('Camera is ready');
+    setCameraError(false);
   };
 
   const styles = StyleSheet.create({
@@ -118,7 +127,10 @@ const QRScannerModal = ({
     },
     scannerContainer: {
       flex: 1,
-      position: 'relative',
+    },
+    cameraContainer: {
+      flex: 1,
+      backgroundColor: '#000',
     },
     overlay: {
       position: 'absolute',
@@ -221,6 +233,29 @@ const QRScannerModal = ({
       fontSize: tablet ? 16 : 14,
       fontWeight: '600',
     },
+    errorContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: '#000',
+    },
+    errorText: {
+      color: '#fff',
+      fontSize: tablet ? 18 : 16,
+      textAlign: 'center',
+      marginBottom: 20,
+    },
+    retryButton: {
+      backgroundColor: '#EF652B',
+      paddingHorizontal: 30,
+      paddingVertical: 15,
+      borderRadius: 8,
+    },
+    retryButtonText: {
+      color: '#fff',
+      fontSize: tablet ? 16 : 14,
+      fontWeight: '600',
+    },
   });
 
   if (!visible) return null;
@@ -228,6 +263,7 @@ const QRScannerModal = ({
   if (hasPermission === false) {
     return (
       <Modal visible={visible} animationType="slide">
+        <StatusBar barStyle="light-content" backgroundColor="#000" />
         <View style={styles.permissionContainer}>
           <Text style={styles.permissionText}>
             Camera permission is required to scan QR codes
@@ -247,8 +283,36 @@ const QRScannerModal = ({
     );
   }
 
+  if (cameraError) {
+    return (
+      <Modal visible={visible} animationType="slide">
+        <StatusBar barStyle="light-content" backgroundColor="#000" />
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>
+            Camera failed to initialize. Please try again.
+          </Text>
+          <TouchableOpacity
+            style={styles.retryButton}
+            onPress={() => {
+              setCameraError(false);
+              setHasPermission(null);
+              requestCameraPermission();
+            }}>
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.retryButton, {marginTop: 15, backgroundColor: '#666'}]}
+            onPress={onClose}>
+            <Text style={styles.retryButtonText}>Cancel</Text>
+          </TouchableOpacity>
+        </View>
+      </Modal>
+    );
+  }
+
   return (
     <Modal visible={visible} animationType="slide">
+      <StatusBar barStyle="light-content" backgroundColor="#000" />
       <View style={styles.modalOverlay}>
         {/* Header */}
         <View style={styles.header}>
@@ -268,11 +332,19 @@ const QRScannerModal = ({
             reactivate={true}
             reactivateTimeout={2000}
             showMarker={false}
-            cameraStyle={styles.scannerContainer}
+            cameraStyle={styles.cameraContainer}
             containerStyle={styles.scannerContainer}
             cameraProps={{
               onMountError: handleError,
+              onCameraReady: handleCameraReady,
+              type: RNCamera.Constants.Type.back,
+              captureAudio: false,
             }}
+            fadeIn={true}
+            checkAndroid6Permissions={true}
+            permissionDialogTitle="Camera Permission"
+            permissionDialogMessage="This app needs camera access to scan QR codes"
+            buttonPositive="OK"
           />
 
           {/* Custom overlay */}
