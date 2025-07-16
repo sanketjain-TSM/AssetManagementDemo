@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, {useState, useRef, useEffect} from 'react';
 import {
   View,
   Text,
@@ -15,47 +15,47 @@ import {
   TouchableNativeFeedback,
   StatusBar,
   Dimensions,
-} from "react-native";
-import axios from "axios";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import ImagesEnum from "../shared/ImagesEnum";
-import { useNavigation } from "@react-navigation/native"; // Import useNavigation hook
+} from 'react-native';
+import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import ImagesEnum from '../shared/ImagesEnum';
+import {useNavigation} from '@react-navigation/native'; // Import useNavigation hook
 
-const { width: screenWidth } = Dimensions.get("window");
+const {width: screenWidth} = Dimensions.get('window');
 const isTablet = screenWidth >= 768;
-const scaleSize = (size) => (isTablet ? size * 1.3 : size);
+const scaleSize = size => (isTablet ? size * 1.3 : size);
 
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
-    paddingTop: Platform.OS === "ios" ? 0 : 0,
+    backgroundColor: '#FFFFFF',
+    paddingTop: Platform.OS === 'ios' ? 0 : 0,
   },
   container: {
     flex: 1,
-    backgroundColor: "#F9F9F9",
+    backgroundColor: '#F9F9F9',
   },
   headerContainer: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: '#FFFFFF',
     paddingVertical: scaleSize(16),
     paddingHorizontal: scaleSize(10),
     borderBottomLeftRadius: 8,
     borderBottomRightRadius: 8,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   header: {
     fontSize: isTablet ? scaleSize(24) : scaleSize(20),
-    fontWeight: "600",
-    color: "#0E0E0E",
+    fontWeight: '600',
+    color: '#0E0E0E',
     flex: 1,
     paddingLeft: scaleSize(10),
     marginLeft: scaleSize(10),
   },
   iconContainer: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   searchicon: {
     marginLeft: scaleSize(40),
@@ -69,16 +69,16 @@ const styles = StyleSheet.create({
     height: scaleSize(43),
   },
   searchBarContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#F9F9F9",
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F9F9F9',
     borderRadius: 5,
     paddingLeft: scaleSize(10),
     marginRight: scaleSize(10),
   },
   searchInput: {
     fontSize: scaleSize(16),
-    color: "#000",
+    color: '#000',
     flex: 1,
     height: scaleSize(43),
   },
@@ -88,15 +88,15 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     flex: 1,
-    backgroundColor: "#F9F9F9",
+    backgroundColor: '#F9F9F9',
     marginTop: scaleSize(15),
     padding: scaleSize(7),
   },
   assetItem: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     padding: scaleSize(16),
-    backgroundColor: "#FFFFFF",
+    backgroundColor: '#FFFFFF',
     borderRadius: 5,
     marginHorizontal: scaleSize(16),
     marginBottom: scaleSize(5),
@@ -111,20 +111,20 @@ const styles = StyleSheet.create({
   },
   assetName: {
     fontSize: scaleSize(15),
-    fontWeight: "600",
+    fontWeight: '600',
   },
   assetMonitored: {
     fontSize: scaleSize(13),
-    color: "#0E0E0E",
+    color: '#0E0E0E',
     opacity: 0.5,
-    fontWeight: "600",
+    fontWeight: '600',
   },
   listContentContainer: {
     paddingBottom: scaleSize(80),
-    backgroundColor: "#F9F9F9",
+    backgroundColor: '#F9F9F9',
   },
   iconsContainer: {
-    flexDirection: "row",
+    flexDirection: 'row',
   },
   icon: {
     width: scaleSize(44),
@@ -132,7 +132,7 @@ const styles = StyleSheet.create({
     marginLeft: scaleSize(10),
   },
   totalText: {
-    flexDirection: "row",
+    flexDirection: 'row',
     marginTop: scaleSize(10),
   },
   searchNormalIcon: {
@@ -141,21 +141,21 @@ const styles = StyleSheet.create({
   },
   assetMonitoredData: {
     fontSize: scaleSize(14),
-    fontWeight: "600",
-    color: "#202239",
+    fontWeight: '600',
+    color: '#202239',
   },
   backButton: {
     padding: scaleSize(10),
   },
 });
 
-export default function DepartmentListScreen({ route }) {
-  const { departmentDetails, departmentName, floor, zoneId } = route.params;
+export default function DepartmentListScreen({route}) {
+  const {departmentDetails, departmentName, floor, zoneId} = route.params;
   const [assets, setAssets] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSearchVisible, setIsSearchVisible] = useState(false);
   const searchBarWidth = useRef(new Animated.Value(0)).current;
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState('');
 
   const navigation = useNavigation(); // Initialize useNavigation
 
@@ -190,12 +190,12 @@ export default function DepartmentListScreen({ route }) {
   //   }
   // };
 
-  const handleSearch = (text) => {
+  const handleSearch = text => {
     setSearchTerm(text);
   };
 
   const toggleSearchBar = () => {
-    setSearchTerm("");
+    setSearchTerm('');
     if (isSearchVisible) {
       Animated.timing(searchBarWidth, {
         toValue: 0,
@@ -211,11 +211,11 @@ export default function DepartmentListScreen({ route }) {
       }).start();
     }
   };
-  const renderItem = ({ item }) => (
+  const renderItem = ({item}) => (
     <TouchableOpacity
       style={styles.assetItem}
       onPress={() =>
-        navigation.navigate("DepartmentAssetDetailsScreen", {
+        navigation.navigate('DepartmentAssetDetailsScreen', {
           asset: item,
           departmentName,
           floor,
@@ -247,7 +247,7 @@ export default function DepartmentListScreen({ route }) {
 
   const searchBarInterpolation = searchBarWidth.interpolate({
     inputRange: [0, 1],
-    outputRange: ["0%", "75%"], // Adjust the final width as needed
+    outputRange: ['0%', '75%'], // Adjust the final width as needed
   });
 
   if (isLoading) {
@@ -258,11 +258,11 @@ export default function DepartmentListScreen({ route }) {
     );
   }
   const ButtonComponent =
-    Platform.OS === "android" ? TouchableNativeFeedback : TouchableOpacity;
+    Platform.OS === 'android' ? TouchableNativeFeedback : TouchableOpacity;
 
   const filteredAssets = searchTerm
-    ? departmentDetails?.filter((asset) =>
-        asset?.description?.toLowerCase()?.includes(searchTerm?.toLowerCase())
+    ? departmentDetails?.filter(asset =>
+        asset?.description?.toLowerCase()?.includes(searchTerm?.toLowerCase()),
       )
     : departmentDetails;
   return (
@@ -271,18 +271,17 @@ export default function DepartmentListScreen({ route }) {
         <View style={styles.headerContainer}>
           <ButtonComponent onPress={() => navigation.goBack()} useForeground>
             <View style={styles.backButton}>
-              <Image source={require("../../assets/images/backArrow.png")} />
+              <Image source={require('../../assets/images/backArrow.png')} />
             </View>
           </ButtonComponent>
           {isSearchVisible ? (
             <Animated.View
               style={[
                 styles.searchBarContainer,
-                { width: searchBarInterpolation },
-              ]}
-            >
+                {width: searchBarInterpolation},
+              ]}>
               <Image
-                source={require("../../assets/images/search-normal.png")}
+                source={require('../../assets/images/search-normal.png')}
                 style={styles.searchNormalIcon}
               />
               <TextInput
@@ -302,14 +301,13 @@ export default function DepartmentListScreen({ route }) {
             {isSearchVisible ? (
               <TouchableOpacity
                 onPress={toggleSearchBar}
-                style={styles.closeIcon}
-              >
-                <Image source={require("../../assets/images/crossIcon.png")} />
+                style={styles.closeIcon}>
+                <Image source={require('../../assets/images/crossIcon.png')} />
               </TouchableOpacity>
             ) : (
               <TouchableOpacity onPress={toggleSearchBar}>
                 <Image
-                  source={require("../../assets/images/searchIcon.png")}
+                  source={require('../../assets/images/searchIcon.png')}
                   style={styles.searchicon}
                 />
               </TouchableOpacity>

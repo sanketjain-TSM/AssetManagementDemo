@@ -284,13 +284,16 @@ const styles = StyleSheet.create({
 const DepartmentAssetDetailsScreen = ({route}) => {
   const {devices} = useDevicesContext();
 
-  const {asset, floor, departmentName, zoneId} = route?.params;
+  const {asset, floor, departmentName, zoneId, onAssetDeleted} = route?.params;
   const [collapsedStates, setCollapsedStates] = useState({});
   const [assetsList, setAssetsList] = useState([]);
   const [skip, setSkip] = useState(0);
   const [limit, setLimit] = useState(10);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
+  const [currentTotalCount, setCurrentTotalCount] = useState(
+    asset?.totalCount || 0,
+  );
 
   // Modal state
   const [showMenuModal, setShowMenuModal] = useState(false);
@@ -320,6 +323,7 @@ const DepartmentAssetDetailsScreen = ({route}) => {
         },
       );
       const newAssets = response?.data?.assets;
+      console.log(newAssets, 'Fetched assets');
       if (newAssets.length < limit) {
         setHasMore(false);
       }
@@ -370,7 +374,7 @@ const DepartmentAssetDetailsScreen = ({route}) => {
       // Navigate to AddAsset screen in edit mode
       navigation.navigate('AddAssetScreen', {
         mode: 'edit',
-        assetId: selectedAsset.tagNumber,
+        assetId: selectedAsset.id,
         assetData: selectedAsset,
       });
     }
@@ -398,13 +402,13 @@ const DepartmentAssetDetailsScreen = ({route}) => {
   };
 
   const deleteAsset = async assetToDelete => {
+    console.log('Deleting asset:', assetToDelete);
     try {
       const token = await AsyncStorage.getItem('token');
 
       // Replace with your actual delete API endpoint
       await axios.delete(
         `https://api.matorg.com/v1/assets/delete-asset/${assetToDelete?.id}`,
-        {},
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -416,6 +420,14 @@ const DepartmentAssetDetailsScreen = ({route}) => {
       setAssetsList(prevList =>
         prevList.filter(item => item.id !== assetToDelete.id),
       );
+
+      // Update local count
+      setCurrentTotalCount(prevCount => Math.max(0, prevCount - 1));
+
+      // Call the callback to update parent screen counts
+      if (onAssetDeleted) {
+        onAssetDeleted(assetToDelete.id, asset.description);
+      }
 
       Alert.alert('Success', 'Asset deleted successfully.');
     } catch (error) {
@@ -546,7 +558,7 @@ const DepartmentAssetDetailsScreen = ({route}) => {
           <View>
             <Text style={styles.modelLabel}>Total Assets :</Text>
           </View>
-          <Text style={styles.modelValue}>{asset.totalCount}</Text>
+          <Text style={styles.modelValue}>{currentTotalCount}</Text>
         </View>
       </View>
 
@@ -575,7 +587,7 @@ const DepartmentAssetDetailsScreen = ({route}) => {
           activeOpacity={1}
           onPress={() => setShowMenuModal(false)}>
           <View style={styles.modalContainer}>
-            <Text style={styles.modalTitle}>Asset Options</Text>
+            {/* <Text style={styles.modalTitle}>Asset Options</Text> */}
 
             <TouchableOpacity
               style={[styles.modalOption, styles.editOption]}

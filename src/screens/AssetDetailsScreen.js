@@ -365,7 +365,7 @@ const AssetDetailsScreen = ({route}) => {
       // Navigate to AddAsset screen in edit mode
       navigation.navigate('AddAssetScreen', {
         mode: 'edit',
-        assetId: selectedAsset.tagNumber,
+        assetId: selectedAsset.id,
         assetData: selectedAsset,
       });
     }
@@ -393,6 +393,7 @@ const AssetDetailsScreen = ({route}) => {
   };
 
   const deleteAsset = async assetToDelete => {
+    console.log(assetToDelete, 'deleting asset');
     try {
       const token = await AsyncStorage.getItem('token');
 
@@ -418,7 +419,8 @@ const AssetDetailsScreen = ({route}) => {
   };
 
   const renderAssetItem = ({item, index}) => {
-    const {formattedDate, formattedTime} = formatDateTime(item.lastSeenTime);
+    console.log(item, 'item');
+    const {formattedDate, formattedTime} = formatDateTime(item?.lastSeenTime);
 
     return (
       <View key={index} style={styles.assetContainer}>
@@ -567,7 +569,7 @@ const AssetDetailsScreen = ({route}) => {
           activeOpacity={1}
           onPress={() => setShowMenuModal(false)}>
           <View style={styles.modalContainer}>
-            <Text style={styles.modalTitle}>Asset Options</Text>
+            {/* <Text style={styles.modalTitle}>Asset Options</Text> */}
 
             <TouchableOpacity
               style={[styles.modalOption, styles.editOption]}
