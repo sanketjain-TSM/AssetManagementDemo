@@ -534,7 +534,6 @@ export default function AddAssetScreen() {
 
   const tablet = isTablet();
 
-  // ✅ Now using the hook that's defined outside the component
   const debouncedDeviceId = useDebounce(deviceId, 800);
 
   useEffect(() => {
@@ -582,9 +581,9 @@ export default function AddAssetScreen() {
   const updateAssetDescription = async (id, description) => {
     try {
       const token = await AsyncStorage.getItem('token');
-      const response = await axios.put(
-        `${BASE_URL}/assets/description/update/${id}`,
-        {description},
+      const response = await axios.post(
+        `${BASE_URL}/assets/upsert-description`,
+        {id, description},
         {headers: {Authorization: `Bearer ${token}`}},
       );
       return response.data;
@@ -612,28 +611,42 @@ export default function AddAssetScreen() {
   const handleModalSubmit = async value => {
     setModalLoading(true);
     try {
-      let response;
       if (modalMode === 'add') {
-        response = await createAssetDescription(value);
+        // For add mode: Make API call with id = 0
+        const response = await updateAssetDescription(0, value);
+
+        setModalVisible(false);
         Alert.alert('Success', 'Asset description added successfully');
+
+        // Refresh the asset descriptions list
+        await loadAssetDescriptions();
+
+        // Set the newly added item as selected
+        // After refresh, find the item by name and set as selected
+        const updatedDescriptions = await getAssetDescriptions();
+        const newItem = updatedDescriptions.find(
+          desc => desc.description === value,
+        );
+        if (newItem) {
+          setAssetDescription(newItem.id);
+        }
       } else {
-        response = await updateAssetDescription(editingItemId, value);
+        // For edit mode: Make API call with actual item ID
+        const response = await updateAssetDescription(editingItemId, value);
+
+        setModalVisible(false);
         Alert.alert('Success', 'Asset description updated successfully');
-      }
 
-      // Refresh the asset descriptions
-      await loadAssetDescriptions();
-      setModalVisible(false);
-
-      // If we're adding a new item, select it
-      if (modalMode === 'add' && response.data?.id) {
-        setAssetDescription(response.data.id);
+        // Refresh the asset descriptions list
+        await loadAssetDescriptions();
       }
     } catch (error) {
       console.error('Modal submit error:', error);
       Alert.alert(
         'Error',
-        `Failed to ${modalMode} asset description. Please try again.`,
+        `Failed to ${
+          modalMode === 'add' ? 'add' : 'update'
+        } asset description. Please try again.`,
       );
     } finally {
       setModalLoading(false);
@@ -809,9 +822,9 @@ export default function AddAssetScreen() {
   const saveAsset = async (assetData, isEdit = false) => {
     try {
       const token = await AsyncStorage.getItem('token');
-
+  
       if (isEdit) {
-        const response = await axios.put(
+        const response = await axios.post(
           `${BASE_URL}/assets/update-asset/${editAssetId}`,
           assetData,
           {headers: {Authorization: `Bearer ${token}`}},
@@ -823,11 +836,13 @@ export default function AddAssetScreen() {
           assetData,
           {headers: {Authorization: `Bearer ${token}`}},
         );
+        console.log(response,"save response")
         return response;
       }
     } catch (error) {
       console.error('Save asset error:', error);
-      throw new Error(`Failed to ${isEdit ? 'update' : 'add'} asset`);
+      // Re-throw the original error to preserve the API response
+      throw error;
     }
   };
 
@@ -861,7 +876,8 @@ export default function AddAssetScreen() {
 
   const handleSaveAsset = async () => {
     Keyboard.dismiss();
-
+    console.log(assetDescription, 'Asset Description');
+  
     // Validation
     if (!deviceId.trim()) {
       Alert.alert('Error', 'Please enter a Device ID.');
@@ -875,7 +891,7 @@ export default function AddAssetScreen() {
       Alert.alert('Error', 'Please enter an Asset ID.');
       return;
     }
-    if (!assetDescription.trim()) {
+    if (!assetDescription) {
       Alert.alert('Error', 'Please select Asset Description/Name.');
       return;
     }
@@ -887,19 +903,20 @@ export default function AddAssetScreen() {
       Alert.alert('Error', 'Last Known Location is required.');
       return;
     }
-
+  
     setLoading(true);
     try {
       const assetDataToSave = {
         deviceId: deviceId.trim(),
-        assetId: assetId.trim(),
-        assetDescription: assetDescription.trim(),
+        tagNumber: assetId.trim(),
+        description: assetDescription,
         zone: zone.trim(),
         lastKnownLocation: lastKnownLocation.trim(),
       };
-
+  
+      console.log('Save asset response:', assetDataToSave);
       const response = await saveAsset(assetDataToSave, isEditMode);
-
+      console.log(response,"response")
       if (response.status === 200 || response.status === 201) {
         const message =
           response.data?.message ||
@@ -931,15 +948,27 @@ export default function AddAssetScreen() {
       }
     } catch (error) {
       console.error('Save asset error:', error);
-      Alert.alert(
-        'Error',
-        `Failed to ${isEditMode ? 'update' : 'add'} asset. Please try again.`,
-      );
+      console.error('Error response:', error.response?.data);
+      
+      // Extract error message from API response
+      let errorMessage = `Failed to ${isEditMode ? 'update' : 'add'} asset. Please try again.`;
+      
+      if (error.response?.data?.error?.message) {
+        // For the structure: { error: { message: "Asset already exists" } }
+        errorMessage = error.response.data.error.message;
+      } else if (error.response?.data?.message) {
+        // For the structure: { message: "Some error message" }
+        errorMessage = error.response.data.message;
+      } else if (error.message && !error.message.includes('Network Error')) {
+        // For general error messages (but not network errors)
+        errorMessage = error.message;
+      }
+      
+      Alert.alert('Error', errorMessage);
     } finally {
       setLoading(false);
     }
   };
-
   // Get validation state for device ID
   const getDeviceIdValidationState = () => {
     if (deviceIdValidating) return 'validating';

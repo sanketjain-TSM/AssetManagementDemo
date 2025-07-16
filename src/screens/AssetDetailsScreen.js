@@ -318,7 +318,11 @@ const AssetDetailsScreen = ({route}) => {
       setHasMore(newAssets.length >= limit);
       setSkip(prevSkip => prevSkip + limit);
     } catch (error) {
-      Alert.alert('Error', 'Failed to load assets.');
+      console.log('Error fetching assets:', error);
+      Alert.alert(
+        'Error',
+        error?.response?.data?.message || 'Failed to load assets.',
+      );
     } finally {
       setLoading(false);
     }
@@ -392,10 +396,8 @@ const AssetDetailsScreen = ({route}) => {
     try {
       const token = await AsyncStorage.getItem('token');
 
-      // Replace with your actual delete API endpoint
       await axios.delete(
         `https://api.matorg.com/v1/assets/delete-asset/${assetToDelete?.id}`,
-        {}, 
         {
           headers: {
             Authorization: `Bearer ${token}`,

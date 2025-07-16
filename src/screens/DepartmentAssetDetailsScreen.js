@@ -326,6 +326,7 @@ const DepartmentAssetDetailsScreen = ({route}) => {
 
       setAssetsList(prevList => [...prevList, ...newAssets]);
     } catch (error) {
+      console.error('Fetch assets error:', error);
       Alert.alert('Error', 'Failed to load assets.');
     } finally {
       setLoading(false);
