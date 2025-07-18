@@ -425,6 +425,7 @@ const AssetDetailsScreen = ({route}) => {
         mode: 'edit',
         assetId: selectedAsset.id,
         assetData: selectedAsset,
+        source: 'assets', // Indicate this edit came from assets screen
       });
     }
   };

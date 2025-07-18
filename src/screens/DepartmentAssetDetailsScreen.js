@@ -445,6 +445,12 @@ const DepartmentAssetDetailsScreen = ({route}) => {
         mode: 'edit',
         assetId: selectedAsset.id,
         assetData: selectedAsset,
+        source: 'department', // Indicate this edit came from department screen
+        departmentParams: {
+          floor,
+          departmentName,
+          zoneId,
+        },
       });
     }
   };

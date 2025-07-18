@@ -37,6 +37,8 @@ export default function AddAssetScreen() {
   const isEditMode = route.params?.mode === 'edit';
   const editAssetId = route.params?.assetId;
   const assetData = route.params?.assetData;
+  const editSource = route.params?.source; // Get the source of the edit
+  const departmentParams = route.params?.departmentParams; // Get department parameters for navigation back
 
   const tablet = isTablet();
 
@@ -74,7 +76,28 @@ export default function AddAssetScreen() {
   const handleSaveAssetWithValidation = async () => {
     const success = await handleSaveAsset(deviceIdValid);
     if (success) {
-      navigation.goBack();
+      if (isEditMode) {
+        // After updating an asset, navigate based on the source
+        if (editSource === 'department') {
+          // If editing from department screen, navigate back to department list
+          if (departmentParams) {
+            navigation.navigate('DepartmentListScreen', {
+              departmentDetails: [], // This will be refreshed by the screen
+              departmentName: departmentParams.departmentName,
+              floor: departmentParams.floor,
+              zoneId: departmentParams.zoneId,
+            });
+          } else {
+            navigation.goBack();
+          }
+        } else {
+          // If editing from assets screen, navigate to the Assets list screen
+          navigation.navigate('Main', {screen: 'Assets'});
+        }
+      } else {
+        // For new assets, go back as before
+        navigation.goBack();
+      }
     }
   };
 
