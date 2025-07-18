@@ -14,6 +14,7 @@ import {
   StatusBar,
   ActivityIndicator,
   Dimensions, // Import ActivityIndicator for the loader
+  Alert,
 } from 'react-native';
 import axios from 'axios'; // Ensure axios is installed
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -161,6 +162,11 @@ const LocationScreen = () => {
   const [isSearchVisible, setIsSearchVisible] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(false); // New loading state
+  const [isFetching, setIsFetching] = useState(false); // Prevent multiple simultaneous calls
+  const lastFetchTime = useRef(0); // Track last fetch time for debouncing
+  const minLoadingTime = useRef(0); // Track minimum loading time
+  const isProcessingRefresh = useRef(false); // Track if we're processing a refresh
+  const lastRefreshTime = useRef(0); // Track last refresh time
 
   const searchBarWidth = useRef(new Animated.Value(0)).current;
 
@@ -171,18 +177,47 @@ const LocationScreen = () => {
   }, []);
 
   useEffect(() => {
-    if (selectedFloor) {
+    if (selectedFloor && !isFetching) {
       // setSearchTerm("");
+      console.log('Floor changed to:', selectedFloor);
       fetchFloorData(selectedFloor);
     }
-  }, [selectedFloor]);
+
+    // Cleanup function to reset loading state when component unmounts or selectedFloor changes
+    return () => {
+      setLoading(false);
+      setIsFetching(false);
+      isProcessingRefresh.current = false;
+      lastRefreshTime.current = 0;
+    };
+  }, [selectedFloor, fetchFloorData, isFetching]);
 
   // Listen for location refresh triggers
   useLocationRefresh(() => {
-    if (selectedFloor) {
-      fetchFloorData(selectedFloor);
+    const now = Date.now();
+
+    // Prevent refresh if we just finished loading (within 2 seconds)
+    if (now - lastRefreshTime.current < 2000) {
+      console.log('Location refresh skipped - too soon since last refresh');
+      return;
     }
-  }, [selectedFloor]);
+
+    if (
+      selectedFloor &&
+      !isFetching &&
+      !loading &&
+      !isProcessingRefresh.current
+    ) {
+      console.log('Location refresh triggered for floor:', selectedFloor);
+      lastRefreshTime.current = now;
+      isProcessingRefresh.current = true;
+      fetchFloorData(selectedFloor);
+    } else {
+      console.log(
+        'Location refresh skipped - already loading, fetching, or processing',
+      );
+    }
+  }, [selectedFloor, fetchFloorData, isFetching, loading]);
 
   function ordinalSuffixOf(i) {
     if (i?.toLowerCase() === 'notinzone') {
@@ -225,30 +260,86 @@ const LocationScreen = () => {
     }
   };
 
-  const fetchFloorData = useCallback(async floor => {
-    setLoading(true); // Set loading to true when fetching starts
-    const token = await AsyncStorage.getItem('token');
-    try {
-      const response = await axios.get(
-        `https://api.matorg.com/v1/assets/floor/${floor}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
+  const fetchFloorData = useCallback(
+    async floor => {
+      if (!floor) {
+        console.log('No floor provided to fetchFloorData');
+        return;
+      }
+
+      // Debounce: prevent calls within 1 second of each other
+      const now = Date.now();
+      if (now - lastFetchTime.current < 1000) {
+        console.log('Debouncing fetch request, too soon since last call');
+        return;
+      }
+
+      // Prevent multiple simultaneous calls
+      if (isFetching) {
+        console.log('Already fetching floor data, skipping...');
+        return;
+      }
+
+      lastFetchTime.current = now;
+      minLoadingTime.current = now + 500; // Minimum 500ms loading time
+      setIsFetching(true);
+      setLoading(true); // Set loading to true when fetching starts
+
+      // Add a timeout to prevent infinite loading
+      const timeoutId = setTimeout(() => {
+        console.warn('Fetch floor data timeout, stopping loading');
+        setLoading(false);
+        setIsFetching(false);
+      }, 10000); // 10 second timeout
+
+      const token = await AsyncStorage.getItem('token');
+
+      if (!token) {
+        console.error('No token found');
+        clearTimeout(timeoutId);
+        setLoading(false);
+        setIsFetching(false);
+        return;
+      }
+
+      try {
+        console.log('Fetching floor data for:', floor);
+        const response = await axios.get(
+          `https://api.matorg.com/v1/assets/floor/${floor}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+            timeout: 8000, // 8 second timeout for axios
           },
-        },
-      );
-      const departmentsData = response.data.map(item => ({
-        zoneId: item.zoneId,
-        department: item.department, // Handle null department
-        assets: item.assetCount,
-      }));
-      setDepartments(departmentsData);
-    } catch (error) {
-      console.error('Failed to fetch department data:', error);
-    } finally {
-      setLoading(false); // Set loading to false when fetching is done
-    }
-  }, []);
+        );
+        const departmentsData = response.data.map(item => ({
+          zoneId: item.zoneId,
+          department: item.department, // Handle null department
+          assets: item.assetCount,
+        }));
+        setDepartments(departmentsData);
+        console.log('Floor data fetched successfully');
+      } catch (error) {
+        console.error('Failed to fetch department data:', error);
+        // Set empty array to prevent UI issues
+        setDepartments([]);
+      } finally {
+        clearTimeout(timeoutId);
+
+        // Ensure minimum loading time to prevent flickering
+        const timeElapsed = Date.now() - lastFetchTime.current;
+        const remainingTime = Math.max(0, 500 - timeElapsed);
+
+        setTimeout(() => {
+          setLoading(false); // Set loading to false when fetching is done
+          setIsFetching(false);
+          isProcessingRefresh.current = false; // Reset refresh processing flag
+        }, remainingTime);
+      }
+    },
+    [isFetching],
+  );
 
   const handleDepartmentPress = async department => {
     const token = await AsyncStorage.getItem('token');

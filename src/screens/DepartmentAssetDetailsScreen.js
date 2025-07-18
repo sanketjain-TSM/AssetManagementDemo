@@ -27,6 +27,7 @@ import {SignalStrengthMeter} from '../components/SignalStrengthMeter';
 import GroundTruth from '../components/GroundTruth';
 import {syncDevicesWithAssets} from '../utils/syncDevicesWithAssets';
 import {useDataRefresh} from '../context/DataRefreshContext';
+import {useAssetRefresh} from '../utils/useAssetRefresh';
 import {ProximityProgressBar} from '../components/ProximityProgressBar';
 import {HzSignalStrengthMeter} from '../components/HzSignalStrengthMeter';
 import {FourBarSignalMeter} from '../components/FourBarSignalMeter';
@@ -338,6 +339,23 @@ const DepartmentAssetDetailsScreen = ({route}) => {
     }, [navigation, fetchAssets, isRefreshing]),
   );
 
+  // Listen for asset refresh triggers
+  useAssetRefresh(() => {
+    if (!isRefreshing && !loading) {
+      console.log('Asset refresh triggered in DepartmentAssetDetailsScreen');
+      setIsRefreshing(true);
+      // Reset and refresh data
+      setAssetsList([]);
+      setSkip(0);
+      setHasMore(true);
+      fetchAssets().finally(() => {
+        setIsRefreshing(false);
+      });
+    } else {
+      console.log('Asset refresh skipped - already refreshing or loading');
+    }
+  }, [fetchAssets, isRefreshing, loading]);
+
   const fetchAssets = useCallback(async () => {
     if (loading || !hasMore) return;
 
@@ -594,6 +612,23 @@ const DepartmentAssetDetailsScreen = ({route}) => {
 
   return (
     <View style={styles.container}>
+      {isRefreshing && (
+        <View
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            backgroundColor: '#EF652B',
+            padding: 10,
+            alignItems: 'center',
+            zIndex: 1000,
+          }}>
+          <Text style={{color: 'white', fontWeight: '600'}}>
+            Refreshing asset data...
+          </Text>
+        </View>
+      )}
       <View style={styles.headerContainer}>
         <View style={styles.backArrorwContainer}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
