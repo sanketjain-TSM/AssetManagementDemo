@@ -19,6 +19,7 @@ import bleIcon from '../../assets/images/bluetooth_searching.png';
 import {useNavigation} from '@react-navigation/native';
 import {useDevicesContext} from '../context/DeviceContext';
 import {syncDevicesWithAssets} from '../utils/syncDevicesWithAssets';
+import {useSearchRefresh} from '../utils/useAssetRefresh';
 import {Keyboard} from 'react-native';
 
 const {width: screenWidth, height: screenHeight} = Dimensions.get('window');
@@ -57,7 +58,7 @@ const HomeScreen = () => {
     fetchSearchData();
   }, []);
 
-  const fetchSearchResults = async query => {
+  const fetchSearchResults = useCallback(async query => {
     if (!query.trim()) {
       setSearchResults([]);
       setLoading(false);
@@ -85,7 +86,7 @@ const HomeScreen = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     if (devices.length === 0) return;
@@ -103,14 +104,17 @@ const HomeScreen = () => {
     );
   }, [JSON.stringify(devices)]);
 
-  const debouncedSearch = useCallback(query => {
-    if (debounceTimeoutRef.current) {
-      clearTimeout(debounceTimeoutRef.current);
-    }
-    debounceTimeoutRef.current = setTimeout(() => {
-      fetchSearchResults(query);
-    }, 500);
-  }, []);
+  const debouncedSearch = useCallback(
+    query => {
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
+      }
+      debounceTimeoutRef.current = setTimeout(() => {
+        fetchSearchResults(query);
+      }, 500);
+    },
+    [fetchSearchResults],
+  );
 
   useEffect(() => {
     if (searchQuery.trim()) {
@@ -124,6 +128,13 @@ const HomeScreen = () => {
       }
     };
   }, [searchQuery, debouncedSearch]);
+
+  // Listen for search refresh triggers
+  useSearchRefresh(() => {
+    if (searchQuery.trim()) {
+      fetchSearchResults(searchQuery);
+    }
+  }, [searchQuery]);
 
   const styles = StyleSheet.create({
     container: {

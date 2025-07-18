@@ -19,13 +19,14 @@ import Collapsible from 'react-native-collapsible';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/Ionicons';
-import {useNavigation} from '@react-navigation/native';
+import {useNavigation, useFocusEffect} from '@react-navigation/native';
 import ImagesEnum from '../shared/ImagesEnum';
 import {formatDateTime} from '../utils/formatDateTime';
 import {useDevicesContext} from '../context/DeviceContext';
 import {SignalStrengthMeter} from '../components/SignalStrengthMeter';
 import GroundTruth from '../components/GroundTruth';
 import {syncDevicesWithAssets} from '../utils/syncDevicesWithAssets';
+import {useDataRefresh} from '../context/DataRefreshContext';
 import {ProximityProgressBar} from '../components/ProximityProgressBar';
 import {HzSignalStrengthMeter} from '../components/HzSignalStrengthMeter';
 import {FourBarSignalMeter} from '../components/FourBarSignalMeter';
@@ -283,6 +284,7 @@ const styles = StyleSheet.create({
 
 const DepartmentAssetDetailsScreen = ({route}) => {
   const {devices} = useDevicesContext();
+  const {triggerAssetRefresh} = useDataRefresh();
 
   const {asset, floor, departmentName, zoneId, onAssetDeleted} = route?.params;
   const [collapsedStates, setCollapsedStates] = useState({});
@@ -294,6 +296,7 @@ const DepartmentAssetDetailsScreen = ({route}) => {
   const [currentTotalCount, setCurrentTotalCount] = useState(
     asset?.totalCount || 0,
   );
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Modal state
   const [showMenuModal, setShowMenuModal] = useState(false);
@@ -305,7 +308,37 @@ const DepartmentAssetDetailsScreen = ({route}) => {
     fetchAssets();
   }, []);
 
-  const fetchAssets = async () => {
+  useEffect(() => {
+    if (skip > 0) {
+      fetchAssets();
+    }
+  }, [skip]);
+
+  // Refresh when returning from edit screen
+  useFocusEffect(
+    React.useCallback(() => {
+      const unsubscribe = navigation.addListener('focus', () => {
+        // Check if we're returning from AddAssetScreen and not already refreshing
+        const routes = navigation.getState()?.routes;
+        const previousRoute = routes[routes.length - 2];
+
+        if (previousRoute?.name === 'AddAssetScreen' && !isRefreshing) {
+          setIsRefreshing(true);
+          // Reset and refresh when returning from edit
+          setAssetsList([]);
+          setSkip(0);
+          setHasMore(true);
+          fetchAssets().finally(() => {
+            setIsRefreshing(false);
+          });
+        }
+      });
+
+      return unsubscribe;
+    }, [navigation, fetchAssets, isRefreshing]),
+  );
+
+  const fetchAssets = useCallback(async () => {
     if (loading || !hasMore) return;
 
     setLoading(true);
@@ -315,7 +348,9 @@ const DepartmentAssetDetailsScreen = ({route}) => {
       const response = await axios.get(
         `http://api.matorg.com:8000/v1/assets/floor/${floor}/${encodeURIComponent(
           departmentName,
-        )}/${zoneId}/${encodeURIComponent(asset?.description)}`,
+        )}/${zoneId}/${encodeURIComponent(
+          asset?.description,
+        )}?skip=${skip}&limit=${limit}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -328,14 +363,30 @@ const DepartmentAssetDetailsScreen = ({route}) => {
         setHasMore(false);
       }
 
-      setAssetsList(prevList => [...prevList, ...newAssets]);
+      // Prevent duplicate data by checking if assets already exist
+      setAssetsList(prevList => {
+        const existingIds = new Set(prevList.map(asset => asset.id));
+        const uniqueNewAssets = newAssets.filter(
+          asset => !existingIds.has(asset.id),
+        );
+        return [...prevList, ...uniqueNewAssets];
+      });
     } catch (error) {
       console.error('Fetch assets error:', error);
       Alert.alert('Error', 'Failed to load assets.');
     } finally {
       setLoading(false);
     }
-  };
+  }, [
+    floor,
+    departmentName,
+    zoneId,
+    asset?.description,
+    loading,
+    hasMore,
+    skip,
+    limit,
+  ]);
 
   function ordinalSuffixOf(i) {
     if (i?.toLowerCase() === 'notinzone') {
@@ -428,6 +479,9 @@ const DepartmentAssetDetailsScreen = ({route}) => {
       if (onAssetDeleted) {
         onAssetDeleted(assetToDelete.id, asset.description);
       }
+
+      // Trigger data refresh across the app
+      triggerAssetRefresh();
 
       Alert.alert('Success', 'Asset deleted successfully.');
     } catch (error) {

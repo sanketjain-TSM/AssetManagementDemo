@@ -16,6 +16,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import {useNavigation} from '@react-navigation/native';
 import SearchResultsScreen from './SearchResultsScreen';
+import {useSearchRefresh} from '../utils/useAssetRefresh';
 
 const SearchScreen = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -26,7 +27,7 @@ const SearchScreen = () => {
   // Using useRef to store the debounce timeout reference
   const debounceTimeoutRef = useRef(null);
 
-  const handleSearch = async query => {
+  const handleSearch = useCallback(async query => {
     if (!query.trim()) {
       setSearchResults([]);
       setLoading(false); // Stop loading if query is empty
@@ -50,19 +51,22 @@ const SearchScreen = () => {
     } finally {
       setLoading(false); // Stop loading when search is done or error occurs
     }
-  };
-
-  const debouncedSearch = useCallback(query => {
-    // Clear the existing timeout to debounce correctly
-    if (debounceTimeoutRef.current) {
-      clearTimeout(debounceTimeoutRef.current);
-    }
-
-    // Set a new debounce timeout
-    debounceTimeoutRef.current = setTimeout(() => {
-      handleSearch(query);
-    }, 500); // Adjust delay if needed
   }, []);
+
+  const debouncedSearch = useCallback(
+    query => {
+      // Clear the existing timeout to debounce correctly
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
+      }
+
+      // Set a new debounce timeout
+      debounceTimeoutRef.current = setTimeout(() => {
+        handleSearch(query);
+      }, 500); // Adjust delay if needed
+    },
+    [handleSearch],
+  );
 
   useEffect(() => {
     if (searchQuery.trim()) {
@@ -78,6 +82,13 @@ const SearchScreen = () => {
       }
     };
   }, [searchQuery, debouncedSearch]);
+
+  // Listen for search refresh triggers
+  useSearchRefresh(() => {
+    if (searchQuery.trim()) {
+      handleSearch(searchQuery);
+    }
+  }, [searchQuery]);
 
   // Conditional Button Component for Android/iOS
   const ButtonComponent =

@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useCallback} from 'react';
 import {
   View,
   Text,
@@ -16,13 +16,14 @@ import Collapsible from 'react-native-collapsible';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/Ionicons';
-import {useNavigation} from '@react-navigation/native';
+import {useNavigation, useFocusEffect} from '@react-navigation/native';
 import ImagesEnum from '../shared/ImagesEnum';
 import {formatDateTime} from '../utils/formatDateTime';
 import {SignalStrengthMeter} from '../components/SignalStrengthMeter';
 import {useDevicesContext} from '../context/DeviceContext';
 import GroundTruth from '../components/GroundTruth';
 import {syncDevicesWithAssets} from '../utils/syncDevicesWithAssets';
+import {useDataRefresh} from '../context/DataRefreshContext';
 import {SixBarIndicatorSignalmeter} from '../components/SixBarIndicatorSignalmeter';
 import {Dimensions} from 'react-native';
 
@@ -279,13 +280,18 @@ const styles = StyleSheet.create({
 
 const AssetDetailsScreen = ({route}) => {
   const {devices} = useDevicesContext();
-  const {asset} = route.params;
+  const {triggerAssetRefresh} = useDataRefresh();
+  const {asset, onAssetDeleted} = route.params;
   const [collapsedStates, setCollapsedStates] = useState({});
   const [assetsList, setAssetsList] = useState([]);
   const [skip, setSkip] = useState(0);
   const [limit, setLimit] = useState(10);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
+  const [currentTotalCount, setCurrentTotalCount] = useState(
+    asset?.totalCount || 0,
+  );
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Modal state
   const [showMenuModal, setShowMenuModal] = useState(false);
@@ -297,7 +303,31 @@ const AssetDetailsScreen = ({route}) => {
     fetchAssets();
   }, []);
 
-  const fetchAssets = async () => {
+  // Refresh when returning from edit screen
+  useFocusEffect(
+    React.useCallback(() => {
+      const unsubscribe = navigation.addListener('focus', () => {
+        // Check if we're returning from AddAssetScreen and not already refreshing
+        const routes = navigation.getState()?.routes;
+        const previousRoute = routes[routes.length - 2];
+
+        if (previousRoute?.name === 'AddAssetScreen' && !isRefreshing) {
+          setIsRefreshing(true);
+          // Reset and refresh when returning from edit
+          setAssetsList([]);
+          setSkip(0);
+          setHasMore(true);
+          fetchAssets().finally(() => {
+            setIsRefreshing(false);
+          });
+        }
+      });
+
+      return unsubscribe;
+    }, [navigation, fetchAssets, isRefreshing]),
+  );
+
+  const fetchAssets = useCallback(async () => {
     if (loading || !hasMore) return;
 
     setLoading(true);
@@ -316,7 +346,14 @@ const AssetDetailsScreen = ({route}) => {
 
       const newAssets = response.data.assetsDetails;
       if (newAssets.length > 0) {
-        setAssetsList(prevList => [...prevList, ...newAssets]);
+        // Prevent duplicate data by checking if assets already exist
+        setAssetsList(prevList => {
+          const existingIds = new Set(prevList.map(asset => asset.id));
+          const uniqueNewAssets = newAssets.filter(
+            asset => !existingIds.has(asset.id),
+          );
+          return [...prevList, ...uniqueNewAssets];
+        });
       }
       setHasMore(newAssets.length >= limit);
       setSkip(prevSkip => prevSkip + limit);
@@ -329,7 +366,7 @@ const AssetDetailsScreen = ({route}) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [asset?.description, loading, hasMore, skip, limit]);
 
   function ordinalSuffixOf(i) {
     if (i?.toLowerCase() === 'notinzone') {
@@ -413,6 +450,17 @@ const AssetDetailsScreen = ({route}) => {
       setAssetsList(prevList =>
         prevList.filter(item => item.id !== assetToDelete.id),
       );
+
+      // Update local count
+      setCurrentTotalCount(prevCount => Math.max(0, prevCount - 1));
+
+      // Call the callback to update parent screen counts
+      if (onAssetDeleted) {
+        onAssetDeleted(assetToDelete.id, asset.description);
+      }
+
+      // Trigger data refresh across the app
+      triggerAssetRefresh();
 
       Alert.alert('Success', 'Asset deleted successfully.');
     } catch (error) {
@@ -545,7 +593,7 @@ const AssetDetailsScreen = ({route}) => {
           <View>
             <Text style={styles.modelLabel}>Total Assets :</Text>
           </View>
-          <Text style={styles.modelValue}>{asset.totalCount}</Text>
+          <Text style={styles.modelValue}>{currentTotalCount}</Text>
         </View>
       </View>
 

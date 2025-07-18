@@ -1,4 +1,4 @@
-import React, {useState, useRef, useEffect} from 'react';
+import React, {useState, useRef, useEffect, useCallback} from 'react';
 import {
   View,
   Text,
@@ -18,6 +18,7 @@ import {
 import axios from 'axios'; // Ensure axios is installed
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {useNavigation} from '@react-navigation/native';
+import {useLocationRefresh} from '../utils/useAssetRefresh';
 
 const {width: screenWidth} = Dimensions.get('window');
 const isTablet = screenWidth >= 768;
@@ -176,6 +177,13 @@ const LocationScreen = () => {
     }
   }, [selectedFloor]);
 
+  // Listen for location refresh triggers
+  useLocationRefresh(() => {
+    if (selectedFloor) {
+      fetchFloorData(selectedFloor);
+    }
+  }, [selectedFloor]);
+
   function ordinalSuffixOf(i) {
     if (i?.toLowerCase() === 'notinzone') {
       return i;
@@ -217,7 +225,7 @@ const LocationScreen = () => {
     }
   };
 
-  const fetchFloorData = async floor => {
+  const fetchFloorData = useCallback(async floor => {
     setLoading(true); // Set loading to true when fetching starts
     const token = await AsyncStorage.getItem('token');
     try {
@@ -240,7 +248,7 @@ const LocationScreen = () => {
     } finally {
       setLoading(false); // Set loading to false when fetching is done
     }
-  };
+  }, []);
 
   const handleDepartmentPress = async department => {
     const token = await AsyncStorage.getItem('token');

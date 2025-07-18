@@ -2,11 +2,13 @@ import {useState, useEffect} from 'react';
 import {Alert, Keyboard} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
+import {useDataRefresh} from '../context/DataRefreshContext';
 
 // Base API URL
 const BASE_URL = 'https://api.matorg.com/v1';
 
 const useAssetForm = (isEditMode, editAssetId, assetData) => {
+  const {triggerAssetRefresh} = useDataRefresh();
   const [deviceId, setDeviceId] = useState('');
   const [assetId, setAssetId] = useState('');
   const [assetDescription, setAssetDescription] = useState('');
@@ -33,10 +35,14 @@ const useAssetForm = (isEditMode, editAssetId, assetData) => {
 
   useEffect(() => {
     loadMasterData();
-    if (isEditMode && assetData) {
+  }, []);
+
+  // Prefill form after master data is loaded
+  useEffect(() => {
+    if (isEditMode && assetData && assetDescriptionOptions.length > 0) {
       prefillFormWithAssetData(assetData);
     }
-  }, []);
+  }, [isEditMode, assetData, assetDescriptionOptions]);
 
   // Auto-fill location when zone changes
   useEffect(() => {
@@ -183,11 +189,17 @@ const useAssetForm = (isEditMode, editAssetId, assetData) => {
   };
 
   // Prefill form with passed asset data
-  const prefillFormWithAssetData = async data => {
+  const prefillFormWithAssetData = data => {
     try {
       setDeviceId(data.deviceId?.trim() || '');
       setAssetId(data.tagNumber || '');
-      setAssetDescription(data.description || '');
+
+      // Find the description ID by matching the description text
+      const descriptionOption = assetDescriptionOptions.find(
+        option => option.label === data.description,
+      );
+      setAssetDescription(descriptionOption ? descriptionOption.value : '');
+
       setZone(data.zoneId || '');
 
       const locationText =
@@ -367,6 +379,9 @@ const useAssetForm = (isEditMode, editAssetId, assetData) => {
       const response = await saveAsset(assetDataToSave, isEditMode);
       console.log(response, 'response');
       if (response.status === 200 || response.status === 201) {
+        // Trigger data refresh across the app
+        triggerAssetRefresh();
+
         const message =
           response.data?.message ||
           (isEditMode

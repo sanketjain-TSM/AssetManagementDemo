@@ -1,4 +1,4 @@
-import React, {useState, useRef, useEffect} from 'react';
+import React, {useState, useRef, useEffect, useCallback} from 'react';
 import {
   View,
   Text,
@@ -19,7 +19,8 @@ import {
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import ImagesEnum from '../shared/ImagesEnum';
-import {useNavigation} from '@react-navigation/native'; // Import useNavigation hook
+import {useNavigation, useFocusEffect} from '@react-navigation/native'; // Import useNavigation hook
+import {useDepartmentRefresh} from '../utils/useAssetRefresh';
 
 const {width: screenWidth} = Dimensions.get('window');
 const isTablet = screenWidth >= 768;
@@ -151,13 +152,56 @@ const styles = StyleSheet.create({
 
 export default function DepartmentListScreen({route}) {
   const {departmentDetails, departmentName, floor, zoneId} = route.params;
-  const [assets, setAssets] = useState([]);
+  const [assets, setAssets] = useState(departmentDetails || []);
   const [isLoading, setIsLoading] = useState(false);
   const [isSearchVisible, setIsSearchVisible] = useState(false);
   const searchBarWidth = useRef(new Animated.Value(0)).current;
   const [searchTerm, setSearchTerm] = useState('');
 
   const navigation = useNavigation(); // Initialize useNavigation
+
+  // Function to refresh department data
+  const refreshDepartmentData = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const token = await AsyncStorage.getItem('token');
+      const response = await axios.get(
+        `https://api.matorg.com/v1/assets/floor/${floor}/${encodeURIComponent(
+          departmentName,
+        )}/${zoneId}`,
+        {
+          headers: {Authorization: `Bearer ${token}`},
+        },
+      );
+      // Update local state instead of route params
+      setAssets(response.data);
+    } catch (error) {
+      console.error('Failed to refresh department data:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [floor, departmentName, zoneId]);
+
+  // Listen for department refresh triggers
+  useDepartmentRefresh(refreshDepartmentData);
+
+  // Refresh when returning from details screen
+  useFocusEffect(
+    React.useCallback(() => {
+      const unsubscribe = navigation.addListener('focus', () => {
+        // Check if we're returning from DepartmentAssetDetailsScreen
+        const routes = navigation.getState()?.routes;
+        const previousRoute = routes[routes.length - 2];
+
+        if (previousRoute?.name === 'DepartmentAssetDetailsScreen') {
+          // Refresh department data when returning from details
+          refreshDepartmentData();
+        }
+      });
+
+      return unsubscribe;
+    }, [navigation, refreshDepartmentData]),
+  );
 
   // useEffect(() => {
   //   console.log("tgfrds");
@@ -220,6 +264,16 @@ export default function DepartmentListScreen({route}) {
           departmentName,
           floor,
           zoneId,
+          onAssetDeleted: (deletedAssetId, assetDescription) => {
+            // Update local state when asset is deleted
+            setAssets(prevAssets =>
+              prevAssets.map(asset =>
+                asset.description === assetDescription
+                  ? {...asset, totalCount: Math.max(0, asset.totalCount - 1)}
+                  : asset,
+              ),
+            );
+          },
         })
       } // Pass the asset data to the details screen
     >
@@ -261,10 +315,10 @@ export default function DepartmentListScreen({route}) {
     Platform.OS === 'android' ? TouchableNativeFeedback : TouchableOpacity;
 
   const filteredAssets = searchTerm
-    ? departmentDetails?.filter(asset =>
+    ? assets?.filter(asset =>
         asset?.description?.toLowerCase()?.includes(searchTerm?.toLowerCase()),
       )
-    : departmentDetails;
+    : assets;
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>

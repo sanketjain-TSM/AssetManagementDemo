@@ -1,5 +1,5 @@
 // Modified AssetScreen with responsive styling support for tablets and mobiles
-import React, {useState, useRef, useEffect} from 'react';
+import React, {useState, useRef, useEffect, useCallback} from 'react';
 import {
   View,
   Text,
@@ -19,7 +19,8 @@ import axios from 'axios';
 import {useFilter} from '../context/FilterContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import ImagesEnum from '../shared/ImagesEnum';
-import {useNavigation} from '@react-navigation/native';
+import {useNavigation, useFocusEffect} from '@react-navigation/native';
+import {useAssetListRefresh} from '../utils/useAssetRefresh';
 
 const {width: screenWidth, height: screenHeight} = Dimensions.get('window');
 const isTablet = screenWidth >= 768;
@@ -34,15 +35,7 @@ export default function AssetsScreen() {
   const {showFilter} = useFilter();
   const navigation = useNavigation();
 
-  useEffect(() => {
-    fetchAssets();
-  }, []);
-
-  const handleSearch = text => {
-    setSearchTerm(text);
-  };
-
-  const fetchAssets = async () => {
+  const fetchAssets = useCallback(async () => {
     try {
       const token = await AsyncStorage.getItem('token');
       const response = await axios.post(
@@ -56,6 +49,23 @@ export default function AssetsScreen() {
     } finally {
       setIsLoading(false);
     }
+  }, []);
+
+  useEffect(() => {
+    fetchAssets();
+  }, []);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchAssets();
+    }, []),
+  );
+
+  // Listen for asset refresh triggers
+  useAssetListRefresh(fetchAssets);
+
+  const handleSearch = text => {
+    setSearchTerm(text);
   };
 
   const toggleSearchBar = () => {
@@ -79,7 +89,22 @@ export default function AssetsScreen() {
   const renderItem = ({item}) => (
     <TouchableOpacity
       style={styles.assetItem}
-      onPress={() => navigation.navigate('AssetDetails', {asset: item})}>
+      onPress={() =>
+        navigation.navigate('AssetDetails', {
+          asset: item,
+          onAssetDeleted: (deletedAssetId, assetDescription) => {
+            setAssets(prevAssets =>
+              prevAssets.map(asset =>
+                asset.description === assetDescription
+                  ? {...asset, totalCount: Math.max(0, asset.totalCount - 1)}
+                  : asset,
+              ),
+            );
+            // Call the delete api and then refresh the assets list
+            fetchAssets();
+          },
+        })
+      }>
       <Image
         source={ImagesEnum?.[item.description]}
         style={styles.assetImage}

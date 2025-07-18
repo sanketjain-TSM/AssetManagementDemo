@@ -475,7 +475,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = ChorusAssetManagementDemo/ChorusAssetManagementDemo.entitlements;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 7;
 				DEVELOPMENT_TEAM = H6WPNURXP3;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = ChorusAssetManagementDemo/Info.plist;
@@ -511,7 +511,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = ChorusAssetManagementDemo/ChorusAssetManagementDemo.entitlements;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 7;
 				DEVELOPMENT_TEAM = H6WPNURXP3;
 				INFOPLIST_FILE = ChorusAssetManagementDemo/Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
