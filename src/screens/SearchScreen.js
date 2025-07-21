@@ -189,6 +189,7 @@ const styles = StyleSheet.create({
     flex: 1, // Ensure the TextInput stretches to fill available space
     marginLeft: 5,
     fontSize: 14,
+    color: '#0E0E0E',
   },
   closeIcon: {
     padding: 5,

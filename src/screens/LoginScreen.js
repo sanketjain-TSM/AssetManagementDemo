@@ -311,6 +311,7 @@ const LoginScreen = () => {
         fontSize: tablet ? (landscape ? 36 : 48) : 42,
         fontWeight: '600',
         textAlign: 'left',
+        color: '#000000',
       },
       subtitle1: {
         fontSize: tablet ? 18 : 15,
@@ -334,6 +335,7 @@ const LoginScreen = () => {
         marginBottom: tablet ? heightPercentageToDP(1) : 10,
         backgroundColor: '#F9F9F9',
         fontSize: tablet ? 18 : 16,
+        color: '#000000',
       },
       input: {
         height: tablet ? heightPercentageToDP(5) : 50,
@@ -343,6 +345,7 @@ const LoginScreen = () => {
         backgroundColor: '#F9F9F9',
         fontSize: tablet ? 18 : 16,
         paddingRight: tablet ? 60 : 50,
+        color: '#000000',
       },
       passwordContainer: {
         position: 'relative',
@@ -376,12 +379,14 @@ const LoginScreen = () => {
         marginLeft: tablet ? -12 : -2,
         fontSize: tablet ? 18 : 15,
         opacity: 0.6,
+        color: '#000000',
       },
       forgotPasswordText: {
         fontSize: tablet ? 18 : 15,
         fontFamily: 'Roboto',
         fontWeight: '500',
         opacity: 0.6,
+        color: '#000000',
       },
       signInButton: {
         height: tablet ? heightPercentageToDP(5) : 50,

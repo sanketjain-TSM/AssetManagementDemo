@@ -29,7 +29,7 @@ const styles = StyleSheet.create({
   safeAreaContainer: {
     flex: 1,
     backgroundColor: '#ffffff',
-    paddingTop: Platform.OS === 'ios' ? 0 : 0,
+    paddingTop: Platform.OS === 'ios' ? 0 : 30,
   },
   container: {
     flex: 1,
@@ -88,6 +88,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: scaleSize(10),
     borderRadius: scaleSize(20),
     alignItems: 'center',
+    color: '#0E0E0E',
   },
   selectedFloorButton: {},
   floorText: {

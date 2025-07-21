@@ -140,7 +140,7 @@ const HomeScreen = () => {
     container: {
       flex: 1,
       backgroundColor: '#fff',
-      paddingTop: Platform.OS === 'ios' ? 40 : 0,
+      paddingTop: Platform.OS === 'ios' ? 40 : 30,
     },
     header: {
       flexDirection: 'row',
@@ -170,6 +170,7 @@ const HomeScreen = () => {
       flex: 1,
       marginLeft: 5,
       fontSize: tablet ? 18 : 14,
+      color: '#000000',
     },
     closeIcon: {
       padding: 5,

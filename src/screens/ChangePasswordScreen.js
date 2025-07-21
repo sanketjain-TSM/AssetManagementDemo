@@ -79,7 +79,7 @@ const ChangePasswordScreen = () => {
           <Text style={styles.headerText}>Change Password</Text>
         </View>
         <View style={styles.formContainer}>
-          <Text style={styles.label}>Create New</Text>
+          <Text style={styles.label}>Create New Password</Text>
           <TextInput
             style={styles.input}
             secureTextEntry
@@ -87,8 +87,9 @@ const ChangePasswordScreen = () => {
             value={newPassword}
             onChangeText={setNewPassword}
             selectionColor="#EF652B"
+            placeholderTextColor="#999"
           />
-          <Text style={styles.label}>Confirm</Text>
+          <Text style={styles.label}>Confirm Password</Text>
           <TextInput
             style={styles.input}
             secureTextEntry
@@ -96,6 +97,7 @@ const ChangePasswordScreen = () => {
             value={confirmPassword}
             onChangeText={setConfirmPassword}
             selectionColor="#EF652B"
+            placeholderTextColor="#999"
           />
           <TouchableOpacity
             style={styles.button}
@@ -119,7 +121,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF',
   },
   scrollContainer: {
-    paddingTop: Platform.OS === 'ios' ? 40 : 20,
+    paddingTop: Platform.OS === 'ios' ? 40 : 60,
+    flex: 1,
     paddingHorizontal: tablet ? widthPercentageToDP(5) : 20,
     flexGrow: 1,
   },
@@ -134,6 +137,7 @@ const styles = StyleSheet.create({
     flex: 1,
     textAlign: 'left',
     marginLeft: 10,
+    color: '#0E0E0E',
   },
   backArrow: {
     width: tablet ? 44 : 36,
@@ -161,7 +165,7 @@ const styles = StyleSheet.create({
     color: '#0E0E0E',
     borderWidth: 1,
     borderColor: '#D9D9D9',
-    marginBottom: tablet ? 25 : 20,
+    marginBottom: tablet ? 25 : 10,
   },
   button: {
     marginTop: tablet ? heightPercentageToDP(4) : 40,

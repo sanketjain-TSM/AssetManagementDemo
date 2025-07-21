@@ -91,7 +91,7 @@ const AssetForm = ({
         showValidationIcon={true}
         enableQRScan={true}
         qrScanTitle="Scan Device ID"
-        qrScanSubtitle="Position the device ID QR code within the frame"
+        qrScanSubtitle="Position the device QR code within the frame"
       />
 
       <DynamicInputField
@@ -102,7 +102,7 @@ const AssetForm = ({
         storageKey="assetId"
         enableQRScan={true}
         qrScanTitle="Scan Asset ID"
-        qrScanSubtitle="Position the asset ID QR code within the frame"
+        qrScanSubtitle="Position the asset QR code within the frame"
       />
 
       <EnhancedDropdown

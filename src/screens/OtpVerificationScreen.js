@@ -179,11 +179,12 @@ const OtpVerificationScreen = () => {
       fontSize: tablet ? (landscape ? 36 : 48) : 42,
       fontWeight: '600',
       textAlign: 'left',
+      color: '#000000',
     },
     subtitle1: {
       fontSize: tablet ? 18 : 15,
       textAlign: 'left',
-      marginBottom: 5,
+      marginBottom: tablet ? heightPercentageToDP(4) : 2,
       fontFamily: 'Roboto',
       opacity: 0.5,
       marginTop: tablet ? heightPercentageToDP(2) : heightPercentageToDP(1),
@@ -194,7 +195,7 @@ const OtpVerificationScreen = () => {
     subtitle2: {
       fontSize: tablet ? 18 : 15,
       textAlign: 'left',
-      marginBottom: tablet ? heightPercentageToDP(4) : 30,
+      marginBottom: tablet ? heightPercentageToDP(4) : 2,
       fontFamily: 'Roboto',
       opacity: 0.5,
       marginLeft: tablet ? 0 : 3,
@@ -283,10 +284,10 @@ const OtpVerificationScreen = () => {
             </View>
 
             <View style={styles.subTitleContainer}>
-              <Text style={styles.subtitle}>
+              <Text style={styles.subtitle1}>
                 We have sent an OTP to your registered email,
               </Text>
-              <Text style={styles.subtitle}>Please enter OTP here</Text>
+              <Text style={styles.subtitle2}>Please enter OTP here</Text>
             </View>
 
             <View style={styles.otpContainer}>

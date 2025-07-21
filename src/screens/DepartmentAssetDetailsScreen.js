@@ -121,6 +121,7 @@ const styles = StyleSheet.create({
     fontSize: scaleSize(14),
     opacity: 0.5,
     marginVertical: scaleSize(4),
+    color: '#0E0E0E',
   },
   infoValue: {
     fontSize: scaleSize(14),

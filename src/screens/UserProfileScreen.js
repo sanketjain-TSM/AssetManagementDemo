@@ -136,7 +136,7 @@ export default function UserProfileScreen() {
     scrollContainer: {
       flexGrow: 1,
       backgroundColor: '#fff',
-      paddingTop: Platform.OS === 'ios' ? 40 : 0,
+      paddingTop: Platform.OS === 'ios' ? 40 : 40,
       paddingHorizontal: tablet ? widthPercentageToDP(5) : 20,
     },
     header: {
@@ -149,6 +149,7 @@ export default function UserProfileScreen() {
       fontWeight: '600',
       flex: 1,
       textAlign: 'left',
+      color: '#0E0E0E',
     },
     backButton: {marginLeft: tablet ? 20 : 15},
     backArrow: {

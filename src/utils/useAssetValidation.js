@@ -7,22 +7,50 @@ import useDebounce from './useDebounce';
 // Base API URL
 const BASE_URL = 'https://api.matorg.com/v1';
 
-const useAssetValidation = deviceId => {
+const useAssetValidation = (deviceId, isEditMode = false) => {
   const [deviceIdValidating, setDeviceIdValidating] = useState(false);
   const [deviceIdValid, setDeviceIdValid] = useState(null);
   const [deviceIdMessage, setDeviceIdMessage] = useState('');
+  const [originalDeviceId, setOriginalDeviceId] = useState(null);
+  const [lastValidatedDeviceId, setLastValidatedDeviceId] = useState(null);
 
   const debouncedDeviceId = useDebounce(deviceId, 800);
 
+  // Set original device ID when in edit mode and deviceId is first loaded
+  useEffect(() => {
+    if (isEditMode && deviceId && originalDeviceId === null) {
+      setOriginalDeviceId(deviceId);
+    }
+  }, [isEditMode, deviceId, originalDeviceId]);
+
   // Validate device ID when debounced value changes
   useEffect(() => {
-    if (debouncedDeviceId && debouncedDeviceId.length > 3) {
+    // Skip validation if we've already validated this exact device ID
+    if (debouncedDeviceId === lastValidatedDeviceId) {
+      return;
+    }
+
+    // Only validate if:
+    // 1. Not in edit mode (always validate for new assets)
+    // 2. OR in edit mode but device ID has changed from original
+    const hasChangedFromOriginal =
+      isEditMode &&
+      originalDeviceId !== null &&
+      debouncedDeviceId !== originalDeviceId;
+    const shouldValidate = !isEditMode || hasChangedFromOriginal;
+
+    if (shouldValidate && debouncedDeviceId && debouncedDeviceId.length > 3) {
+      setLastValidatedDeviceId(debouncedDeviceId);
       validateDeviceId(debouncedDeviceId);
+    } else if (!shouldValidate) {
+      // In edit mode and device ID hasn't changed, don't validate
+      setDeviceIdValid(null);
+      setDeviceIdMessage('');
     } else {
       setDeviceIdValid(null);
       setDeviceIdMessage('');
     }
-  }, [debouncedDeviceId]);
+  }, [debouncedDeviceId, isEditMode, originalDeviceId, lastValidatedDeviceId]);
 
   // Validate Device ID
   const validateDeviceId = async deviceIdToValidate => {

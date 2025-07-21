@@ -80,6 +80,7 @@ const AssetDescriptionModal = ({
       paddingVertical: tablet ? 15 : 12,
       fontSize: tablet ? 16 : 14,
       backgroundColor: '#f9f9f9',
+      color: '#0E0E0E',
     },
     buttonContainer: {
       flexDirection: 'row',

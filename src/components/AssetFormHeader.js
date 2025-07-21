@@ -29,6 +29,7 @@ const AssetFormHeader = ({title, onBackPress}) => {
       fontWeight: '600',
       flex: 1,
       textAlign: 'left',
+      color: '#0E0E0E',
     },
     backButton: {marginLeft: tablet ? 20 : 15},
     backArrow: {

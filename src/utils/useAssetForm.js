@@ -335,6 +335,8 @@ const useAssetForm = (isEditMode, editAssetId, assetData) => {
       Alert.alert('Error', 'Please enter a Device ID.');
       return;
     }
+    // Only validate device ID if validation explicitly failed (deviceIdValid === false)
+    // In edit mode, if deviceIdValid is null, it means the device ID hasn't changed and validation was skipped
     if (deviceIdValid === false) {
       Alert.alert('Error', 'Please enter a valid Device ID.');
       return;

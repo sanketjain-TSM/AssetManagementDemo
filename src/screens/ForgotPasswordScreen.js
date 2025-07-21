@@ -112,6 +112,7 @@ const ForgotPasswordScreen = () => {
       fontSize: tablet ? (landscape ? 36 : 48) : 42,
       fontWeight: '600',
       textAlign: 'left',
+      color: '#000000',
     },
     subtitle1: {
       fontSize: tablet ? 18 : 15,
@@ -143,6 +144,7 @@ const ForgotPasswordScreen = () => {
       marginBottom: tablet ? heightPercentageToDP(2) : 40,
       backgroundColor: '#F9F9F9',
       fontSize: tablet ? 18 : 16,
+      color: '#000000',
     },
     eyeIcon: {
       position: 'absolute',

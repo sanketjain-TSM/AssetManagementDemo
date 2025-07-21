@@ -76,10 +76,10 @@ const getTabBarBackgroundStyle = () => {
     // Styles for small devices
     return {
       width: width * 1.5,
-      height: height * 0.175,
+      height: height * 0.23,
       position: 'absolute',
       left: -(width * 0.25),
-      bottom: -(height * 0.045),
+      bottom: -(height * 0.069),
     };
   } else if (width > smallDeviceWidth && width <= mediumDeviceWidth) {
     // Styles for medium devices
@@ -165,7 +165,7 @@ const MainTabNavigator = () => {
         tabBarLabelStyle: {
           fontSize: 12,
           fontWeight: '600',
-          marginTop: Platform.OS === 'ios' ? -10 : 0,
+          marginTop: Platform.OS === 'ios' ? -10 : 8,
           marginLeft: Platform.OS === 'ios' && tablet ? 1 : 0,
         },
         tabBarStyle: styles.tabBarStyle,
@@ -365,11 +365,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     flex: 1,
-    height: Platform.OS === 'ios' ? 60 : 55,
+    height: Platform.OS === 'ios' ? 60 : 40,
   },
   searchTabButtonContainer: {
     position: 'relative', // Allow custom positioning of elements within
-
+    marginTop: -30,
     ...getSearchTabButtonContainerStyle(),
   },
   searchTab: {

@@ -116,6 +116,7 @@ const styles = StyleSheet.create({
     fontSize: scaleSize(14),
     opacity: 0.5,
     marginVertical: scaleSize(4),
+    color: '#000000',
   },
   infoValue: {
     fontSize: scaleSize(14),
@@ -149,7 +150,7 @@ const styles = StyleSheet.create({
   lastKnownLocation: {
     backgroundColor: '#F2F9FF',
     padding: scaleSize(10),
-    height: scaleSize(175),
+    // height: scaleSize(180),
     justifyContent: 'center',
     borderRadius: 5,
     width: '100%',

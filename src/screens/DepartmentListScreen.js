@@ -30,7 +30,7 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: '#FFFFFF',
-    paddingTop: Platform.OS === 'ios' ? 0 : 0,
+    paddingTop: Platform.OS === 'ios' ? 0 : 40,
   },
   container: {
     flex: 1,
@@ -113,6 +113,7 @@ const styles = StyleSheet.create({
   assetName: {
     fontSize: scaleSize(15),
     fontWeight: '600',
+    color: '#0E0E0E',
   },
   assetMonitored: {
     fontSize: scaleSize(13),

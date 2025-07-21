@@ -209,7 +209,8 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    backgroundColor: '#F9F9F9',
+    paddingTop: Platform.OS === 'ios' ? 40 : 40,
+    // backgroundColor: '#F9F9F9',
   },
   headerContainer: {
     backgroundColor: '#FFFFFF',
@@ -274,6 +275,7 @@ const styles = StyleSheet.create({
   assetName: {
     fontSize: baseFontSize,
     fontWeight: '600',
+    color: '#0E0E0E',
   },
   assetMonitored: {
     fontSize: baseFontSize - 1,
@@ -284,10 +286,12 @@ const styles = StyleSheet.create({
   assetMonitoredData: {
     fontSize: baseFontSize - 2,
     fontWeight: '600',
+    color: '#0E0E0E',
   },
   totalText: {
     flexDirection: 'row',
     marginTop: 8,
+    color: '#0E0E0E',
   },
   listContentContainer: {
     paddingBottom: 80,
