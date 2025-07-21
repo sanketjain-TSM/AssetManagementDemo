@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF',
   },
   scrollContainer: {
-    paddingTop: Platform.OS === 'ios' ? 40 : 60,
+    paddingTop: Platform.OS === 'ios' ? 30 : 50,
     flex: 1,
     paddingHorizontal: tablet ? widthPercentageToDP(5) : 20,
     flexGrow: 1,

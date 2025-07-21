@@ -140,7 +140,7 @@ const HomeScreen = () => {
     container: {
       flex: 1,
       backgroundColor: '#fff',
-      paddingTop: Platform.OS === 'ios' ? 40 : 30,
+      paddingTop: Platform.OS === 'ios' ? 40 : 20,
     },
     header: {
       flexDirection: 'row',

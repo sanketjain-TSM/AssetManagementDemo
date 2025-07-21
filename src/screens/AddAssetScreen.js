@@ -105,7 +105,7 @@ export default function AddAssetScreen() {
     scrollContainer: {
       flexGrow: 1,
       backgroundColor: '#fff',
-      paddingTop: Platform.OS === 'ios' ? 40 : 40,
+      paddingTop: Platform.OS === 'ios' ? 40 : 30,
       paddingHorizontal: tablet ? widthPercentageToDP(5) : 20,
     },
     loadingContainer: {

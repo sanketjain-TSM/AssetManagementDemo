@@ -12,6 +12,7 @@ import {
   TouchableWithoutFeedback,
   Image,
   Text,
+  StatusBar,
 } from 'react-native';
 import HomeIconActive from '../../assets/images/homeHighlight.png';
 import HomeIconInactive from '../../assets/images/homeUnHighlight.png';
@@ -76,7 +77,7 @@ const getTabBarBackgroundStyle = () => {
     // Styles for small devices
     return {
       width: width * 1.5,
-      height: height * 0.23,
+      height: height * 0.22,
       position: 'absolute',
       left: -(width * 0.25),
       bottom: -(height * 0.069),
@@ -165,7 +166,14 @@ const MainTabNavigator = () => {
         tabBarLabelStyle: {
           fontSize: 12,
           fontWeight: '600',
-          marginTop: Platform.OS === 'ios' ? -10 : 8,
+          marginTop:
+            Platform.OS === 'ios' ? -10 : StatusBar.currentHeight > 0 ? 8 : 2,
+          marginBottom:
+            Platform.OS === 'android'
+              ? StatusBar.currentHeight > 0
+                ? 6
+                : 6
+              : 0,
           marginLeft: Platform.OS === 'ios' && tablet ? 1 : 0,
         },
         tabBarStyle: styles.tabBarStyle,
@@ -348,7 +356,7 @@ const AppNavigator = () => {
 
 const styles = StyleSheet.create({
   tabBarStyle: {
-    height: Platform.OS === 'ios' ? 80 : 60,
+    height: Platform.OS === 'ios' ? 80 : 50,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     position: 'absolute',

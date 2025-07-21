@@ -14,6 +14,7 @@ import {
   Alert,
   Platform,
   Dimensions,
+  StatusBar,
 } from 'react-native';
 import axios from 'axios';
 import {useFilter} from '../context/FilterContext';
@@ -209,7 +210,12 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    paddingTop: Platform.OS === 'ios' ? 40 : 40,
+    paddingTop:
+      Platform.OS === 'ios'
+        ? 40
+        : StatusBar.currentHeight
+        ? StatusBar.currentHeight
+        : 30,
     // backgroundColor: '#F9F9F9',
   },
   headerContainer: {

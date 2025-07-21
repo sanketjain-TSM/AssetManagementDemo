@@ -274,7 +274,13 @@ const LoginScreen = () => {
       container: {
         padding: tablet ? widthPercentageToDP(5) : 20,
         paddingTop:
-          tablet && Platform.OS === 'ios' ? 100 : StatusBar.currentHeight,
+          Platform.OS === 'ios'
+            ? tablet
+              ? 100
+              : 40
+            : StatusBar.currentHeight > 0
+            ? StatusBar.currentHeight
+            : 20,
         justifyContent: tablet && landscape ? 'flex-start' : 'center',
         paddingBottom: tablet ? heightPercentageToDP(8) : 75,
         minHeight: tablet && landscape ? '100%' : 'auto',

@@ -30,7 +30,7 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: '#FFFFFF',
-    paddingTop: Platform.OS === 'ios' ? 0 : 40,
+    paddingTop: Platform.OS === 'ios' ? 0 : 20,
   },
   container: {
     flex: 1,
@@ -45,6 +45,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+  },
+  headerMiddle: {
+    flex: 1,
+    marginHorizontal: scaleSize(5),
   },
   header: {
     fontSize: isTablet ? scaleSize(24) : scaleSize(20),
@@ -302,7 +306,7 @@ export default function DepartmentListScreen({route}) {
 
   const searchBarInterpolation = searchBarWidth.interpolate({
     inputRange: [0, 1],
-    outputRange: ['0%', '75%'], // Adjust the final width as needed
+    outputRange: ['0%', '85%'], // Adjust the final width as needed
   });
 
   if (isLoading) {
@@ -329,29 +333,30 @@ export default function DepartmentListScreen({route}) {
               <Image source={require('../../assets/images/backArrow.png')} />
             </View>
           </ButtonComponent>
-          {isSearchVisible ? (
-            <Animated.View
-              style={[
-                styles.searchBarContainer,
-                {width: searchBarInterpolation},
-              ]}>
-              <Image
-                source={require('../../assets/images/search-normal.png')}
-                style={styles.searchNormalIcon}
-              />
-              <TextInput
-                style={styles.searchInput}
-                placeholder="Search"
-                placeholderTextColor="#888"
-                autoFocus
-                onChangeText={handleSearch}
-                selectionColor="#EF652B"
-              />
-            </Animated.View>
-          ) : null}
-          {!isSearchVisible && (
-            <Text style={styles.header}>{departmentName}</Text>
-          )}
+          <View style={styles.headerMiddle}>
+            {isSearchVisible ? (
+              <Animated.View
+                style={[
+                  styles.searchBarContainer,
+                  {width: searchBarInterpolation},
+                ]}>
+                <Image
+                  source={require('../../assets/images/search-normal.png')}
+                  style={styles.searchNormalIcon}
+                />
+                <TextInput
+                  style={styles.searchInput}
+                  placeholder="Search"
+                  placeholderTextColor="#888"
+                  autoFocus
+                  onChangeText={handleSearch}
+                  selectionColor="#EF652B"
+                />
+              </Animated.View>
+            ) : (
+              <Text style={styles.header}>{departmentName}</Text>
+            )}
+          </View>
           <View style={styles.iconContainer}>
             {isSearchVisible ? (
               <TouchableOpacity

@@ -136,7 +136,7 @@ export default function UserProfileScreen() {
     scrollContainer: {
       flexGrow: 1,
       backgroundColor: '#fff',
-      paddingTop: Platform.OS === 'ios' ? 40 : 40,
+      paddingTop: Platform.OS === 'ios' ? 40 : 20,
       paddingHorizontal: tablet ? widthPercentageToDP(5) : 20,
     },
     header: {
