@@ -136,7 +136,7 @@ export default function UserProfileScreen() {
     scrollContainer: {
       flexGrow: 1,
       backgroundColor: '#fff',
-      paddingTop: Platform.OS === 'ios' ? 40 : 20,
+      paddingTop: Platform.OS === 'ios' ? 40 : 30,
       paddingHorizontal: tablet ? widthPercentageToDP(5) : 20,
     },
     header: {
@@ -181,6 +181,7 @@ export default function UserProfileScreen() {
       fontSize: tablet ? 18 : 16,
       fontWeight: '400',
       marginBottom: 8,
+      color: '#0E0E0E',
     },
     input: {
       height: tablet ? 60 : 50,

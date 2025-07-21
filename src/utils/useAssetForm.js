@@ -276,6 +276,7 @@ const useAssetForm = (isEditMode, editAssetId, assetData) => {
   const saveAsset = async (assetData, isEdit = false) => {
     try {
       const token = await AsyncStorage.getItem('token');
+      console.log('assetData', assetData);
 
       if (isEdit) {
         const response = await axios.post(
@@ -290,7 +291,7 @@ const useAssetForm = (isEditMode, editAssetId, assetData) => {
           assetData,
           {headers: {Authorization: `Bearer ${token}`}},
         );
-        console.log(response, 'save response');
+
         return response;
       }
     } catch (error) {

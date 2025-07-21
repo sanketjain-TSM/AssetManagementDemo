@@ -99,6 +99,7 @@ const OtpVerificationScreen = () => {
   };
 
   const handleResendOtp = async () => {
+    console.log('OTP Sent Succefully...');
     if (timer) return;
     setLoading(true);
     try {

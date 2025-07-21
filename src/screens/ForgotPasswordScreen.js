@@ -78,12 +78,15 @@ const ForgotPasswordScreen = () => {
 
   const styles = StyleSheet.create({
     container: {
+      flex: 1,
+      flexGrow: 1,
       padding: tablet ? widthPercentageToDP(5) : 20,
-      paddingTop:
-        Platform.OS === 'ios' ? 0 : StatusBar.currentHeight > 0 ? 10 : 20,
+      paddingTop: Platform.OS === 'ios' ? 10 : 20,
       backgroundColor: '#FFF',
       justifyContent: tablet && landscape ? 'flex-start' : 'center',
-      paddingBottom: tablet ? heightPercentageToDP(8) : 75,
+      paddingBottom: tablet
+        ? heightPercentageToDP(8)
+        : heightPercentageToDP(20),
       minHeight: tablet && landscape ? '100%' : '100%',
     },
     contentWrapper: {
@@ -103,11 +106,11 @@ const ForgotPasswordScreen = () => {
     logo: {
       marginBottom: tablet
         ? landscape
-          ? heightPercentageToDP(10)
-          : heightPercentageToDP(6)
-        : heightPercentageToDP(5), // was 15 → reduce
-      marginTop: tablet ? heightPercentageToDP(3) : heightPercentageToDP(2), // was 5 → reduce
-      transform: tablet ? [{scale: landscape ? 1.2 : 1.3}] : [{scale: 0.7}], // was 0.8 → slightly smaller
+          ? heightPercentageToDP(15)
+          : heightPercentageToDP(8)
+        : 210,
+      marginTop: tablet ? heightPercentageToDP(5) : 50,
+      transform: tablet ? [{scale: landscape ? 1.2 : 1.5}] : [{scale: 1}],
     },
     title: {
       fontSize: tablet ? (landscape ? 36 : 48) : 42,
