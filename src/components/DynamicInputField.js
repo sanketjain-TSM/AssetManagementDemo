@@ -305,8 +305,6 @@ const DynamicInputField = React.memo(
     const inputRef = useRef(null);
     const modalInputRef = useRef(null);
 
-    console.log('dropdownItems', dropdownItems);
-
     // Use stable refs for callbacks to prevent useEffect re-runs
     const onChangeTextRef = useRef(onChangeText);
     const onDropdownItemsChangeRef = useRef(onDropdownItemsChange);
@@ -481,7 +479,6 @@ const DynamicInputField = React.memo(
     }, []); // Empty dependency array makes this stable
 
     const handleQRScan = useCallback(scannedData => {
-      console.log('QR Scan result:', scannedData);
       if (onChangeTextRef.current) {
         onChangeTextRef.current(scannedData);
       }

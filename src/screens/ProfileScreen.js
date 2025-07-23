@@ -242,6 +242,7 @@ const ProfileScreen = () => {
       fontSize: tablet ? 16 : 14,
       marginBottom: tablet ? 25 : 20,
       textAlign: 'center',
+      color: '#0E0E0E',
     },
     buttonRow: {
       flexDirection: 'row',
@@ -401,7 +402,10 @@ const ProfileScreen = () => {
                 <View style={styles.buttonRow}>
                   <TouchableOpacity
                     style={[styles.button, styles.cancelButton]}
-                    onPress={() => setDialogVisible(false)}>
+                    onPress={() => {
+                      setDialogBoxTitle('Download User Manual');
+                      setDialogVisible(false);
+                    }}>
                     <Text style={styles.buttonText}>Cancel</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
