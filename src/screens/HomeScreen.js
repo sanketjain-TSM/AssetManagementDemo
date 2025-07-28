@@ -1,4 +1,4 @@
-import React, {useEffect, useState, useCallback, useRef} from 'react';
+import React, {useEffect, useState, useCallback, useRef, useMemo} from 'react';
 import {
   View,
   Text,
@@ -16,10 +16,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import SearchResultsScreen from './SearchResultsScreen';
 import bleIcon from '../../assets/images/bluetooth_searching.png';
-import {useNavigation} from '@react-navigation/native';
+import {useNavigation, useFocusEffect} from '@react-navigation/native';
 import {useDevicesContext} from '../context/DeviceContext';
 import {syncDevicesWithAssets} from '../utils/syncDevicesWithAssets';
-import {useSearchRefresh} from '../utils/useAssetRefresh';
 import {Keyboard} from 'react-native';
 
 const {width: screenWidth, height: screenHeight} = Dimensions.get('window');
@@ -36,6 +35,8 @@ const HomeScreen = () => {
   const [searchResults, setSearchResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const debounceTimeoutRef = useRef(null);
+  const deviceUpdateTimeoutRef = useRef(null);
+  const isInitialMount = useRef(true);
   const navigation = useNavigation();
 
   useEffect(() => {
@@ -45,10 +46,7 @@ const HomeScreen = () => {
         const storedQuery = await AsyncStorage.getItem(`searchQuery-${userId}`);
         if (storedQuery) {
           setSearchQuery(storedQuery);
-          const storedResults = await AsyncStorage.getItem(
-            `searchResults-${userId}`,
-          );
-          if (storedResults) setSearchResults(JSON.parse(storedResults));
+          fetchSearchResults(storedQuery);
         }
       } catch (error) {
         console.error('Failed to retrieve search data:', error);
@@ -58,12 +56,32 @@ const HomeScreen = () => {
     fetchSearchData();
   }, []);
 
+  // Refresh search results when returning to screen
+  useFocusEffect(
+    React.useCallback(() => {
+      if (searchQuery.trim() && !isInitialMount.current) {
+        // Clear current results and fetch fresh data
+        setSearchResults([]);
+        setLoading(true);
+        fetchSearchResults(searchQuery);
+      }
+      // Mark that initial mount is complete
+      isInitialMount.current = false;
+    }, [searchQuery, fetchSearchResults]),
+  );
+
   const fetchSearchResults = useCallback(async query => {
     if (!query.trim()) {
       setSearchResults([]);
       setLoading(false);
       return;
     }
+
+    // Prevent multiple simultaneous calls
+    if (loading) {
+      return;
+    }
+
     try {
       setLoading(true);
       const token = await AsyncStorage.getItem('token');
@@ -76,33 +94,54 @@ const HomeScreen = () => {
 
       setSearchResults(response.data);
       await AsyncStorage.setItem(`searchQuery-${userId}`, query);
-      await AsyncStorage.setItem(
-        `searchResults-${userId}`,
-        JSON.stringify(response.data),
-      );
     } catch (error) {
       console.error('Failed to fetch search results:', error);
       Alert.alert('Error', 'Failed to fetch search results.');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, []); // Removed loading dependency to prevent function recreation
 
   useEffect(() => {
-    if (devices.length === 0) return;
-    const deviceMap = syncDevicesWithAssets(devices);
-    setSearchResults(prevAssetsList =>
-      prevAssetsList?.map(asset => {
-        if (deviceMap.has(asset.deviceId)) {
-          return {
-            ...asset,
-            rssi: deviceMap.get(asset.deviceId),
-          };
-        }
-        return asset;
-      }),
-    );
-  }, [JSON.stringify(devices)]);
+    if (devices.length === 0 || searchResults.length === 0 || loading) return;
+
+    // Debounce device updates to prevent rapid state changes
+    if (deviceUpdateTimeoutRef.current) {
+      clearTimeout(deviceUpdateTimeoutRef.current);
+    }
+
+    deviceUpdateTimeoutRef.current = setTimeout(() => {
+      const deviceMap = syncDevicesWithAssets(devices);
+      if (!deviceMap) return;
+
+      // Check if any device data actually changed to prevent unnecessary updates
+      const hasDeviceChanges = searchResults.some(
+        asset =>
+          deviceMap.has(asset.deviceId) &&
+          asset.rssi !== deviceMap.get(asset.deviceId),
+      );
+
+      if (hasDeviceChanges) {
+        setSearchResults(prevAssetsList =>
+          prevAssetsList?.map(asset => {
+            if (deviceMap.has(asset.deviceId)) {
+              return {
+                ...asset,
+                rssi: deviceMap.get(asset.deviceId),
+              };
+            }
+            return asset;
+          }),
+        );
+      }
+    }, 200); // Increased debounce to 200ms for device updates
+
+    return () => {
+      if (deviceUpdateTimeoutRef.current) {
+        clearTimeout(deviceUpdateTimeoutRef.current);
+      }
+    };
+  }, [devices, loading]); // Added loading dependency to prevent device updates during search
 
   const debouncedSearch = useCallback(
     query => {
@@ -110,10 +149,12 @@ const HomeScreen = () => {
         clearTimeout(debounceTimeoutRef.current);
       }
       debounceTimeoutRef.current = setTimeout(() => {
-        fetchSearchResults(query);
+        if (!loading && query.trim()) {
+          fetchSearchResults(query);
+        }
       }, 500);
     },
-    [fetchSearchResults],
+    [fetchSearchResults, loading],
   );
 
   useEffect(() => {
@@ -121,20 +162,64 @@ const HomeScreen = () => {
       debouncedSearch(searchQuery);
     } else {
       setSearchResults([]);
+      setLoading(false);
+
+      // Clear stored search data when search query is empty
+      const clearStoredData = async () => {
+        try {
+          const userId = await AsyncStorage.getItem('savedEmail');
+          if (userId) {
+            await AsyncStorage.removeItem(`searchQuery-${userId}`);
+          }
+        } catch (error) {
+          console.error('Failed to clear stored search data:', error);
+        }
+      };
+      clearStoredData();
     }
     return () => {
       if (debounceTimeoutRef.current) {
         clearTimeout(debounceTimeoutRef.current);
       }
     };
-  }, [searchQuery, debouncedSearch]);
+  }, [searchQuery]); // Removed debouncedSearch dependency to prevent infinite loops
 
-  // Listen for search refresh triggers
-  useSearchRefresh(() => {
-    if (searchQuery.trim()) {
-      fetchSearchResults(searchQuery);
+  // Memoize search results to prevent unnecessary re-renders
+  const memoizedSearchResults = useMemo(() => searchResults, [searchResults]);
+
+  // Memoize search input handlers
+  const handleSearchQueryChange = useCallback(async text => {
+    setSearchQuery(text);
+
+    // If the search query is cleared, also clear stored data
+    if (!text.trim()) {
+      try {
+        const userId = await AsyncStorage.getItem('savedEmail');
+        if (userId) {
+          await AsyncStorage.removeItem(`searchQuery-${userId}`);
+        }
+      } catch (error) {
+        console.error('Failed to clear stored search data:', error);
+      }
     }
-  }, [searchQuery]);
+  }, []);
+
+  const handleClearSearch = useCallback(async () => {
+    setSearchQuery('');
+    setSearchResults([]);
+    setLoading(false);
+    Keyboard.dismiss();
+
+    // Clear stored search data from AsyncStorage
+    try {
+      const userId = await AsyncStorage.getItem('savedEmail');
+      if (userId) {
+        await AsyncStorage.removeItem(`searchQuery-${userId}`);
+      }
+    } catch (error) {
+      console.error('Failed to clear stored search data:', error);
+    }
+  }, []);
 
   const styles = StyleSheet.create({
     container: {
@@ -217,14 +302,11 @@ const HomeScreen = () => {
             style={styles.searchInput}
             placeholder="Asset Type, Chorus ID, Asset ID, Location."
             value={searchQuery}
-            onChangeText={setSearchQuery}
+            onChangeText={handleSearchQueryChange}
             selectionColor="#EF652B"
           />
           <TouchableOpacity
-            onPress={() => {
-              setSearchQuery('');
-              Keyboard.dismiss();
-            }}
+            onPress={handleClearSearch}
             style={styles.closeIcon}>
             <Image source={require('../../assets/images/crossIcon.png')} />
           </TouchableOpacity>
@@ -234,8 +316,8 @@ const HomeScreen = () => {
         <View style={styles.loaderContainer}>
           <ActivityIndicator size="large" color="#EF652B" />
         </View>
-      ) : searchResults?.length ? (
-        <SearchResultsScreen searchResults={searchResults} />
+      ) : memoizedSearchResults?.length ? (
+        <SearchResultsScreen searchResults={memoizedSearchResults} />
       ) : (
         <View style={styles.content}>
           <Image

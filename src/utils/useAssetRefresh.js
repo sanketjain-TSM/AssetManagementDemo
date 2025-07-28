@@ -1,4 +1,4 @@
-import {useEffect} from 'react';
+import {useEffect, useRef} from 'react';
 import {useDataRefresh} from '../context/DataRefreshContext';
 
 /**
@@ -13,14 +13,30 @@ export const useAssetRefresh = (
   dependencies = [],
 ) => {
   const {refreshTriggers} = useDataRefresh();
+  const lastRefreshRef = useRef(0);
+  const isRefreshingRef = useRef(false);
 
   useEffect(() => {
     if (
       refreshTriggers[dataType] > 0 &&
       refreshFunction &&
-      typeof refreshFunction === 'function'
+      typeof refreshFunction === 'function' &&
+      !isRefreshingRef.current
     ) {
-      refreshFunction();
+      const now = Date.now();
+      if (now - lastRefreshRef.current > 1000) {
+        // Prevent refreshes within 1 second
+        isRefreshingRef.current = true;
+        lastRefreshRef.current = now;
+
+        // Call refresh function
+        refreshFunction();
+
+        // Reset refreshing flag after a delay
+        setTimeout(() => {
+          isRefreshingRef.current = false;
+        }, 1000);
+      }
     }
   }, [refreshTriggers[dataType], refreshFunction, ...dependencies]);
 };

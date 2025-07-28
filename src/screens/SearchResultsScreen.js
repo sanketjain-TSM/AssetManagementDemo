@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, {useEffect, useState, useMemo} from 'react';
 import {
   View,
   Text,
@@ -8,24 +8,24 @@ import {
   Keyboard,
   Platform,
   Dimensions,
-} from "react-native";
-import { TouchableWithoutFeedback } from "react-native-gesture-handler";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import ImagesEnum from "../shared/ImagesEnum";
-import { formatDateTime } from "../utils/formatDateTime";
-import { SixBarIndicatorSignalmeter } from "../components/SixBarIndicatorSignalmeter";
+} from 'react-native';
+import {TouchableWithoutFeedback} from 'react-native-gesture-handler';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import ImagesEnum from '../shared/ImagesEnum';
+import {formatDateTime} from '../utils/formatDateTime';
+import {SixBarIndicatorSignalmeter} from '../components/SixBarIndicatorSignalmeter';
 
-const { width: screenWidth } = Dimensions.get("window");
+const {width: screenWidth} = Dimensions.get('window');
 const isTablet = screenWidth >= 768;
-const scaleSize = (size) => (isTablet ? size * 1.3 : size);
+const scaleSize = size => (isTablet ? size * 1.3 : size);
 
-const SearchResultsScreen = ({ searchResults }) => {
-  const [role, setRole] = useState("");
+const SearchResultsScreen = React.memo(({searchResults}) => {
+  const [role, setRole] = useState('');
 
   useEffect(() => {
     let isMounted = true;
     const fetchRole = async () => {
-      const role = await AsyncStorage.getItem("role");
+      const role = await AsyncStorage.getItem('role');
       if (isMounted) setRole(role);
     };
     fetchRole();
@@ -34,19 +34,19 @@ const SearchResultsScreen = ({ searchResults }) => {
     };
   }, []);
 
-  const ordinalSuffixOf = (i) => {
-    if (i?.toString()?.toLowerCase() === "notinzone") return i;
+  const ordinalSuffixOf = i => {
+    if (i?.toString()?.toLowerCase() === 'notinzone') return i;
     i = Number(i);
     let j = i % 10,
       k = i % 100;
-    if (j == 1 && k != 11) return i + "st Floor";
-    if (j == 2 && k != 12) return i + "nd Floor";
-    if (j == 3 && k != 13) return i + "rd Floor";
-    return i + "th Floor";
+    if (j == 1 && k != 11) return i + 'st Floor';
+    if (j == 2 && k != 12) return i + 'nd Floor';
+    if (j == 3 && k != 13) return i + 'rd Floor';
+    return i + 'th Floor';
   };
 
-  const renderResultItem = ({ item }) => {
-    const { formattedDate, formattedTime } = formatDateTime(item.lastSeenTime);
+  const renderResultItem = ({item}) => {
+    const {formattedDate, formattedTime} = formatDateTime(item.lastSeenTime);
 
     return (
       <View style={styles.resultItem}>
@@ -64,7 +64,7 @@ const SearchResultsScreen = ({ searchResults }) => {
               CHORUS ID: <Text style={styles.detailValue}>{item.deviceId}</Text>
             </Text>
             <Text style={styles.detailLabel}>
-              ZONE:{" "}
+              ZONE:{' '}
               <Text style={styles.detailValue}>
                 {item.department} {item.zoneId ? `(${item.zoneId})` : null}
               </Text>
@@ -76,27 +76,27 @@ const SearchResultsScreen = ({ searchResults }) => {
           <Text style={styles.locationTitle}>LAST KNOWN LOCATION</Text>
           <View style={styles.locationRow}>
             <Image
-              source={require("../../assets/images/calendar.png")}
+              source={require('../../assets/images/calendar.png')}
               style={styles.icon}
             />
             <Text style={styles.locationText}>{formattedDate}</Text>
           </View>
           <View style={styles.locationRow}>
             <Image
-              source={require("../../assets/images/clock.png")}
+              source={require('../../assets/images/clock.png')}
               style={styles.icon}
             />
             <Text style={styles.locationText}>{formattedTime}</Text>
           </View>
           <View style={styles.locationRow}>
             <Image
-              source={require("../../assets/images/location.png")}
+              source={require('../../assets/images/location.png')}
               style={styles.icon}
             />
             <Text style={styles.locationText}>
               {item?.floor ? ordinalSuffixOf(item?.floor) : null}
-              {item?.department?.toLowerCase() === "unknown"
-                ? ""
+              {item?.department?.toLowerCase() === 'unknown'
+                ? ''
                 : `, ${item?.department}`}
             </Text>
           </View>
@@ -108,34 +108,44 @@ const SearchResultsScreen = ({ searchResults }) => {
     );
   };
 
+  const memoizedSearchResults = useMemo(() => searchResults, [searchResults]);
+
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
       <View style={styles.container}>
         <FlatList
-          data={searchResults}
+          data={memoizedSearchResults}
           renderItem={renderResultItem}
           keyExtractor={(item, index) => `${item.id}-${index}`}
           initialNumToRender={10}
           windowSize={5}
+          removeClippedSubviews={true}
+          maxToRenderPerBatch={10}
+          updateCellsBatchingPeriod={50}
+          getItemLayout={(data, index) => ({
+            length: scaleSize(200), // Approximate item height
+            offset: scaleSize(200) * index,
+            index,
+          })}
         />
       </View>
     </TouchableWithoutFeedback>
   );
-};
+});
 
 const styles = StyleSheet.create({
   container: {
     padding: scaleSize(16),
-    backgroundColor: "#F9F9F9",
+    backgroundColor: '#F9F9F9',
   },
   resultItem: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: '#FFFFFF',
     borderRadius: 5,
     padding: scaleSize(16),
     marginBottom: scaleSize(12),
   },
   topSection: {
-    flexDirection: "row",
+    flexDirection: 'row',
     marginBottom: scaleSize(10),
   },
   deviceImage: {
@@ -149,48 +159,48 @@ const styles = StyleSheet.create({
   },
   resultTitle: {
     fontSize: scaleSize(16),
-    fontWeight: "600",
-    color: "#0E0E0E",
+    fontWeight: '600',
+    color: '#0E0E0E',
     marginBottom: scaleSize(4),
   },
   chorusBox: {
-    backgroundColor: "#FEE8E4",
-    alignSelf: "flex-start",
+    backgroundColor: '#FEE8E4',
+    alignSelf: 'flex-start',
     paddingHorizontal: scaleSize(10),
     paddingVertical: scaleSize(2),
     borderRadius: scaleSize(13),
     marginBottom: scaleSize(6),
   },
   chorusIdText: {
-    color: "#EF652B",
+    color: '#EF652B',
     fontSize: scaleSize(10),
   },
   detailLabel: {
     fontSize: scaleSize(12),
-    color: "#202239",
+    color: '#202239',
     opacity: 0.5,
   },
   detailValue: {
     fontSize: scaleSize(12),
-    color: "#202239",
+    color: '#202239',
     opacity: 1,
   },
   lastKnownLocation: {
-    backgroundColor: "#F2F9FF",
+    backgroundColor: '#F2F9FF',
     borderRadius: 5,
     padding: scaleSize(10),
     marginTop: scaleSize(10),
   },
   locationTitle: {
     fontSize: scaleSize(12),
-    fontWeight: "600",
-    color: "#202239",
+    fontWeight: '600',
+    color: '#202239',
     opacity: 0.5,
     marginBottom: scaleSize(6),
   },
   locationRow: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: scaleSize(6),
   },
   icon: {
@@ -200,7 +210,7 @@ const styles = StyleSheet.create({
   },
   locationText: {
     fontSize: scaleSize(14),
-    color: "#202239",
+    color: '#202239',
   },
   signalMeter: {
     marginTop: scaleSize(6),

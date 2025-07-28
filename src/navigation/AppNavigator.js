@@ -68,39 +68,54 @@ const mediumDeviceWidth = 414;
 const ButtonComponent =
   Platform.OS === 'android' ? TouchableWithoutFeedback : TouchableOpacity;
 
-// Create dynamic styles based on the screen size
-const getTabBarBackgroundStyle = () => {
-  const {width, height} = Dimensions.get('window');
-  const isLandscape = width > height;
-  if (width <= smallDeviceWidth) {
-    // Styles for small devices
-    return {
-      width: width * 1.5,
-      height: height * 0.175,
-      position: 'absolute',
-      left: -(width * 0.25),
-      bottom: -(height * 0.045),
-    };
-  } else if (width > smallDeviceWidth && width <= mediumDeviceWidth) {
-    // Styles for medium devices
-    return {
-      width: width * 1.5,
-      height: Platform.OS === 'ios' ? height * 0.2 : height * 0.18,
-      position: 'absolute',
-      left: -(width * 0.25),
-      bottom: -(height * 0.05),
-    };
-  } else {
-    // Styles for large devices (tablet)
-    return {
-      width: tablet && isLandscape ? width * 1.5 : width * 1.5,
-      height: isLandscape ? height * 0.195 : height * 0.16,
-      position: 'absolute',
-      left: -(width * 0.25),
-      bottom: -(height * 0.06),
-    };
-  }
-};
+  const getTabBarBackgroundStyle = () => {
+    const { width, height } = Dimensions.get("window");
+    const isLandscape = width > height;
+  
+    const isiOS = Platform.OS === "ios";
+  
+    // Approximate width/height thresholds for iPhone 14/15/16 series
+    const isGreaterThanIPhone13 =
+      isiOS && width >= 390 && height >= 844 && width < 800;
+  
+    if (width <= smallDeviceWidth) {
+      // Styles for small devices
+      return {
+        width: width * 1.5,
+        height: height * 0.175,
+        position: "absolute",
+        left: -(width * 0.25),
+        bottom: -(height * 0.045),
+      };
+    } else if (width > smallDeviceWidth && width <= mediumDeviceWidth) {
+      // Styles for medium devices
+      return {
+        width: width * 1.5,
+        height: isiOS ? height * 0.2 : height * 0.18,
+        position: "absolute",
+        left: -(width * 0.25),
+        bottom: -(height * 0.05),
+      };
+    } else if (isGreaterThanIPhone13) {
+      // Styles for iPhone 14/15/16 series
+      return {
+        width: width * 1.5,
+        height: isLandscape ? height * 0.19 : height * 0.199,
+        position: "absolute",
+        left: -(width * 0.25),
+        bottom: -(height * 0.055),
+      };
+    } else {
+      // Styles for large devices (tablet and others)
+      return {
+        width: width * 1.5,
+        height: isLandscape ? height * 0.195 : height * 0.16,
+        position: "absolute",
+        left: -(width * 0.25),
+        bottom: -(height * 0.06),
+      };
+    }
+  };
 
 const getSearchTabButtonContainerStyle = () => {
   if (width <= smallDeviceWidth) {

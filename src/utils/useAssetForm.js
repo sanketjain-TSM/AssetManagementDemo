@@ -379,8 +379,10 @@ const useAssetForm = (isEditMode, editAssetId, assetData) => {
       const response = await saveAsset(assetDataToSave, isEditMode);
       console.log(response, 'response');
       if (response.status === 200 || response.status === 201) {
-        // Trigger data refresh across the app
-        triggerAssetRefresh();
+        // Trigger data refresh across the app with delay to prevent freezing
+        setTimeout(() => {
+          triggerAssetRefresh();
+        }, 500);
 
         const message =
           response.data?.message ||

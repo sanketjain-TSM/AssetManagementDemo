@@ -312,7 +312,11 @@ const AssetDetailsScreen = ({route}) => {
         const routes = navigation.getState()?.routes;
         const previousRoute = routes[routes.length - 2];
 
-        if (previousRoute?.name === 'AddAssetScreen' && !isRefreshing) {
+        if (
+          previousRoute?.name === 'AddAssetScreen' &&
+          !isRefreshing &&
+          !loading
+        ) {
           setIsRefreshing(true);
           // Reset and refresh when returning from edit
           setAssetsList([]);
@@ -325,7 +329,7 @@ const AssetDetailsScreen = ({route}) => {
       });
 
       return unsubscribe;
-    }, [navigation, fetchAssets, isRefreshing]),
+    }, [navigation, fetchAssets, isRefreshing, loading]),
   );
 
   // Listen for asset refresh triggers
@@ -478,8 +482,10 @@ const AssetDetailsScreen = ({route}) => {
         onAssetDeleted(assetToDelete.id, asset.description);
       }
 
-      // Trigger data refresh across the app
-      triggerAssetRefresh();
+      // Trigger data refresh across the app with delay to prevent freezing
+      setTimeout(() => {
+        triggerAssetRefresh();
+      }, 500);
 
       Alert.alert('Success', 'Asset deleted successfully.');
     } catch (error) {

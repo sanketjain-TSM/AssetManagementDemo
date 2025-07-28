@@ -14,9 +14,8 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
-import {useNavigation} from '@react-navigation/native';
+import {useNavigation, useFocusEffect} from '@react-navigation/native';
 import SearchResultsScreen from './SearchResultsScreen';
-import {useSearchRefresh} from '../utils/useAssetRefresh';
 
 const SearchScreen = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -26,11 +25,46 @@ const SearchScreen = () => {
 
   // Using useRef to store the debounce timeout reference
   const debounceTimeoutRef = useRef(null);
+  const isInitialMount = useRef(true);
+
+  // Component cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Refresh search results when returning to screen
+  useFocusEffect(
+    React.useCallback(() => {
+      if (searchQuery.trim() && !isInitialMount.current) {
+        // Clear current results and fetch fresh data
+        setSearchResults([]);
+        setLoading(true);
+        handleSearch(searchQuery);
+      }
+      // Mark that initial mount is complete
+      isInitialMount.current = false;
+    }, [searchQuery, handleSearch]),
+  );
+
+  const handleClearSearch = useCallback(() => {
+    setSearchQuery('');
+    setSearchResults([]);
+    setLoading(false);
+  }, []);
 
   const handleSearch = useCallback(async query => {
     if (!query.trim()) {
       setSearchResults([]);
       setLoading(false); // Stop loading if query is empty
+      return;
+    }
+
+    // Prevent multiple simultaneous calls
+    if (loading) {
       return;
     }
 
@@ -51,7 +85,7 @@ const SearchScreen = () => {
     } finally {
       setLoading(false); // Stop loading when search is done or error occurs
     }
-  }, []);
+  }, []); // Removed loading dependency to prevent function recreation
 
   const debouncedSearch = useCallback(
     query => {
@@ -62,10 +96,12 @@ const SearchScreen = () => {
 
       // Set a new debounce timeout
       debounceTimeoutRef.current = setTimeout(() => {
-        handleSearch(query);
+        if (!loading && query.trim()) {
+          handleSearch(query);
+        }
       }, 500); // Adjust delay if needed
     },
-    [handleSearch],
+    [handleSearch, loading],
   );
 
   useEffect(() => {
@@ -73,6 +109,7 @@ const SearchScreen = () => {
       debouncedSearch(searchQuery);
     } else {
       setSearchResults([]);
+      setLoading(false);
     }
 
     // Cleanup function to clear the timeout if the component unmounts or updates
@@ -81,14 +118,7 @@ const SearchScreen = () => {
         clearTimeout(debounceTimeoutRef.current);
       }
     };
-  }, [searchQuery, debouncedSearch]);
-
-  // Listen for search refresh triggers
-  useSearchRefresh(() => {
-    if (searchQuery.trim()) {
-      handleSearch(searchQuery);
-    }
-  }, [searchQuery]);
+  }, [searchQuery]); // Removed debouncedSearch dependency to prevent infinite loops
 
   // Conditional Button Component for Android/iOS
   const ButtonComponent =
@@ -121,7 +151,7 @@ const SearchScreen = () => {
             selectionColor="#EF652B"
           />
           <TouchableOpacity
-            onPress={() => setSearchQuery('')}
+            onPress={handleClearSearch}
             style={styles.closeIcon}>
             <Image source={require('../../assets/images/crossIcon.png')} />
           </TouchableOpacity>

@@ -18,7 +18,7 @@ import {
 } from 'react-native';
 import axios from 'axios'; // Ensure axios is installed
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {useNavigation} from '@react-navigation/native';
+import {useNavigation, useFocusEffect} from '@react-navigation/native';
 import {useLocationRefresh} from '../utils/useAssetRefresh';
 
 const {width: screenWidth} = Dimensions.get('window');
@@ -153,6 +153,11 @@ const styles = StyleSheet.create({
     opacity: 0.1,
     fontSize: scaleSize(18),
   },
+  noDataText: {
+    fontSize: scaleSize(18),
+    color: '#888',
+    fontStyle: 'italic',
+  },
 });
 
 const LocationScreen = () => {
@@ -163,10 +168,15 @@ const LocationScreen = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(false); // New loading state
   const [isFetching, setIsFetching] = useState(false); // Prevent multiple simultaneous calls
+  const [initialLoading, setInitialLoading] = useState(true); // Initial loading state
   const lastFetchTime = useRef(0); // Track last fetch time for debouncing
   const minLoadingTime = useRef(0); // Track minimum loading time
   const isProcessingRefresh = useRef(false); // Track if we're processing a refresh
   const lastRefreshTime = useRef(0); // Track last refresh time
+  const lastFocusRefreshTime = useRef(0); // Track last focus refresh time
+  const isInitialMount = useRef(true); // Track if this is the initial mount
+  const currentFloorRef = useRef(''); // Track current floor being fetched
+  const abortControllerRef = useRef(null); // Track abort controller for current request
 
   const searchBarWidth = useRef(new Animated.Value(0)).current;
 
@@ -174,50 +184,106 @@ const LocationScreen = () => {
 
   useEffect(() => {
     fetchFloors();
+
+    // Cleanup function to cancel any pending requests
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
   }, []);
+
+  // Refresh floor data when returning to screen - always refresh to prevent stale data
+  useFocusEffect(
+    React.useCallback(() => {
+      // Skip on initial mount
+      if (isInitialMount.current) {
+        isInitialMount.current = false;
+        return;
+      }
+
+      const now = Date.now();
+
+      // Check if we're returning from a screen that might have modified data
+      const routes = navigation.getState()?.routes;
+      const previousRoute =
+        routes && routes.length > 1 ? routes[routes.length - 2] : null;
+      const shouldForceRefresh =
+        previousRoute?.name === 'DepartmentAssetDetailsScreen' ||
+        previousRoute?.name === 'AddAssetScreen' ||
+        previousRoute?.name === 'DepartmentListScreen';
+
+      console.log(
+        'Focus effect triggered, previous route:',
+        previousRoute?.name,
+        'shouldForceRefresh:',
+        shouldForceRefresh,
+      );
+
+      // Always refresh when returning to screen, but add small debounce to prevent rapid refreshes
+      if (now - lastFocusRefreshTime.current < 300) {
+        console.log('Focus refresh skipped - too soon since last refresh');
+        return;
+      }
+
+      console.log('Refreshing all data on focus');
+      lastFocusRefreshTime.current = now;
+
+      // Always refresh floors first, then refresh floor data
+      fetchFloors().then(() => {
+        // Always refresh floor data if a floor is selected
+        if (selectedFloor && !isFetching && !loading) {
+          console.log('Refreshing floor data on focus for:', selectedFloor);
+          fetchFloorData(selectedFloor);
+        } else if (!selectedFloor) {
+          // Clear departments if no floor is selected
+          setDepartments([]);
+        }
+      });
+    }, []), // Empty dependency array to prevent continuous refreshes
+  );
 
   useEffect(() => {
     if (selectedFloor && !isFetching) {
-      // setSearchTerm("");
       console.log('Floor changed to:', selectedFloor);
       fetchFloorData(selectedFloor);
+    } else if (!selectedFloor) {
+      setDepartments([]);
+      currentFloorRef.current = '';
     }
-
-    // Cleanup function to reset loading state when component unmounts or selectedFloor changes
-    return () => {
-      setLoading(false);
-      setIsFetching(false);
-      isProcessingRefresh.current = false;
-      lastRefreshTime.current = 0;
-    };
   }, [selectedFloor, fetchFloorData, isFetching]);
 
-  // Listen for location refresh triggers
-  useLocationRefresh(() => {
-    const now = Date.now();
+  // Backup mechanism to ensure refresh when returning from specific screens
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('state', e => {
+      const routes = e.data.state?.routes;
+      const currentRoute =
+        routes && routes.length > 0 ? routes[routes.length - 1] : null;
+      const previousRoute =
+        routes && routes.length > 1 ? routes[routes.length - 2] : null;
 
-    // Prevent refresh if we just finished loading (within 2 seconds)
-    if (now - lastRefreshTime.current < 2000) {
-      console.log('Location refresh skipped - too soon since last refresh');
-      return;
-    }
+      // If we're on LocationScreen and coming from a screen that might have modified data
+      if (
+        currentRoute?.name === 'LocationScreen' &&
+        (previousRoute?.name === 'DepartmentAssetDetailsScreen' ||
+          previousRoute?.name === 'AddAssetScreen' ||
+          previousRoute?.name === 'DepartmentListScreen')
+      ) {
+        console.log('Navigation state change detected, forcing refresh');
+        setTimeout(() => {
+          fetchFloors().then(() => {
+            if (selectedFloor) {
+              fetchFloorData(selectedFloor);
+            }
+          });
+        }, 100);
+      }
+    });
 
-    if (
-      selectedFloor &&
-      !isFetching &&
-      !loading &&
-      !isProcessingRefresh.current
-    ) {
-      console.log('Location refresh triggered for floor:', selectedFloor);
-      lastRefreshTime.current = now;
-      isProcessingRefresh.current = true;
-      fetchFloorData(selectedFloor);
-    } else {
-      console.log(
-        'Location refresh skipped - already loading, fetching, or processing',
-      );
-    }
-  }, [selectedFloor, fetchFloorData, isFetching, loading]);
+    return unsubscribe;
+  }, [navigation, selectedFloor, fetchFloors, fetchFloorData]);
+
+  // REMOVED useLocationRefresh hook completely to stop continuous loading
 
   function ordinalSuffixOf(i) {
     if (i?.toLowerCase() === 'notinzone') {
@@ -239,6 +305,7 @@ const LocationScreen = () => {
   }
 
   const fetchFloors = async () => {
+    setInitialLoading(true);
     const token = await AsyncStorage.getItem('token');
     try {
       const response = await axios.get(
@@ -253,10 +320,23 @@ const LocationScreen = () => {
 
       setFloors(fetchedFloors);
       if (fetchedFloors.length > 0) {
-        setSelectedFloor(fetchedFloors[0]?.floor); // Set the first floor as the default selected floor
+        // Check if current selected floor still exists in the new list
+        const floorExists = fetchedFloors.some(
+          floor => floor?.floor === selectedFloor,
+        );
+        if (!floorExists) {
+          // If current floor doesn't exist, select the first available floor
+          setSelectedFloor(fetchedFloors[0]?.floor);
+        }
+      } else {
+        // If no floors available, clear the selection
+        setSelectedFloor('');
       }
     } catch (error) {
       console.error('Failed to fetch floors:', error);
+      Alert.alert('Error', 'Failed to load floors.');
+    } finally {
+      setInitialLoading(false);
     }
   };
 
@@ -267,29 +347,50 @@ const LocationScreen = () => {
         return;
       }
 
-      // Debounce: prevent calls within 1 second of each other
+      // Cancel previous request if it's for a different floor
+      if (abortControllerRef.current && currentFloorRef.current !== floor) {
+        console.log(
+          'Cancelling previous request for floor:',
+          currentFloorRef.current,
+        );
+        abortControllerRef.current.abort();
+      }
+
+      // Debounce: prevent calls within 800ms of each other for the same floor
       const now = Date.now();
-      if (now - lastFetchTime.current < 1000) {
-        console.log('Debouncing fetch request, too soon since last call');
+      if (
+        now - lastFetchTime.current < 800 &&
+        currentFloorRef.current === floor
+      ) {
+        console.log(
+          'Debouncing fetch request, too soon since last call for same floor',
+        );
         return;
       }
 
-      // Prevent multiple simultaneous calls
-      if (isFetching) {
-        console.log('Already fetching floor data, skipping...');
+      // Prevent multiple simultaneous calls for the same floor
+      if (isFetching && currentFloorRef.current === floor) {
+        console.log('Already fetching floor data for this floor, skipping...');
         return;
       }
 
       lastFetchTime.current = now;
+      currentFloorRef.current = floor;
       minLoadingTime.current = now + 500; // Minimum 500ms loading time
       setIsFetching(true);
       setLoading(true); // Set loading to true when fetching starts
+
+      // Create new abort controller for this request
+      abortControllerRef.current = new AbortController();
 
       // Add a timeout to prevent infinite loading
       const timeoutId = setTimeout(() => {
         console.warn('Fetch floor data timeout, stopping loading');
         setLoading(false);
         setIsFetching(false);
+        if (abortControllerRef.current) {
+          abortControllerRef.current.abort();
+        }
       }, 10000); // 10 second timeout
 
       const token = await AsyncStorage.getItem('token');
@@ -311,6 +412,7 @@ const LocationScreen = () => {
               Authorization: `Bearer ${token}`,
             },
             timeout: 8000, // 8 second timeout for axios
+            signal: abortControllerRef.current.signal, // Add abort signal
           },
         );
         const departmentsData = response.data.map(item => ({
@@ -321,21 +423,31 @@ const LocationScreen = () => {
         setDepartments(departmentsData);
         console.log('Floor data fetched successfully');
       } catch (error) {
+        if (error.name === 'AbortError') {
+          console.log('Request was aborted for floor:', floor);
+          return;
+        }
         console.error('Failed to fetch department data:', error);
         // Set empty array to prevent UI issues
         setDepartments([]);
       } finally {
         clearTimeout(timeoutId);
 
-        // Ensure minimum loading time to prevent flickering
-        const timeElapsed = Date.now() - lastFetchTime.current;
-        const remainingTime = Math.max(0, 500 - timeElapsed);
+        // Only update state if this is still the current request
+        if (currentFloorRef.current === floor) {
+          // Ensure minimum loading time to prevent flickering
+          const timeElapsed = Date.now() - lastFetchTime.current;
+          const remainingTime = Math.max(0, 500 - timeElapsed);
 
-        setTimeout(() => {
-          setLoading(false); // Set loading to false when fetching is done
-          setIsFetching(false);
-          isProcessingRefresh.current = false; // Reset refresh processing flag
-        }, remainingTime);
+          setTimeout(() => {
+            setLoading(false); // Set loading to false when fetching is done
+            setIsFetching(false);
+            isProcessingRefresh.current = false; // Reset refresh processing flag
+          }, remainingTime);
+        } else {
+          // If this is not the current request, still reset the processing flag
+          isProcessingRefresh.current = false;
+        }
       }
     },
     [isFetching],
@@ -396,7 +508,7 @@ const LocationScreen = () => {
         asset?.department?.toLowerCase()?.includes(searchTerm?.toLowerCase()),
       )
     : departments;
-
+  // return <View></View>;
   return (
     <SafeAreaView style={styles.safeAreaContainer}>
       <View style={styles.container}>
@@ -484,9 +596,13 @@ const LocationScreen = () => {
         </View>
 
         {/* Show Loader while loading */}
-        {loading ? (
+        {initialLoading || loading ? (
           <View style={styles.loaderContainer}>
             <ActivityIndicator size="large" color="#EF652B" />
+          </View>
+        ) : floors.length === 0 ? (
+          <View style={styles.loaderContainer}>
+            <Text style={styles.noDataText}>No floors available</Text>
           </View>
         ) : (
           <FlatList
