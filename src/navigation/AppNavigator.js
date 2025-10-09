@@ -69,116 +69,177 @@ const mediumDeviceWidth = 414;
 const ButtonComponent =
   Platform.OS === 'android' ? TouchableWithoutFeedback : TouchableOpacity;
 
+// Dynamic device info hook that updates on orientation change
+const useDeviceInfo = () => {
+  const [deviceInfo, setDeviceInfo] = useState(() => {
+    const { width, height } = Dimensions.get("window");
+    return getDeviceInfo(width, height);
+  });
+
+  useEffect(() => {
+    const subscription = Dimensions.addEventListener("change", ({ window }) => {
+      setDeviceInfo(getDeviceInfo(window.width, window.height));
+    });
+
+    return () => subscription?.remove();
+  }, []);
+
+  return deviceInfo;
+};
+
+const getDeviceInfo = (width, height) => {
+  // Get the smaller and larger dimensions (independent of orientation)
+  const smallerDimension = Math.min(width, height);
+  const largerDimension = Math.max(width, height);
+  const aspectRatio = largerDimension / smallerDimension;
+
+  // Tablet detection logic:
+  // 1. Smaller dimension should be >= 600 for tablets (more reliable than 768)
+  // 2. Aspect ratio should be < 1.8 (tablets are typically 1.3-1.6, phones are 2.0+)
+  const isTablet = smallerDimension >= 600 && aspectRatio < 1.8;
+
+  return {
+    width,
+    height,
+    isTablet,
+    isLandscape: width > height,
+    aspectRatio,
+    smallerDimension,
+    largerDimension,
+  };
+};
+
+const getTabBarStyle = (width, height, isTablet) => ({
+  height: Platform.OS === "ios" ? 80 : 60,
+  borderTopLeftRadius: 20,
+  borderTopRightRadius: 20,
+  position: "absolute",
+  bottom: 0,
+  left: 0,
+  right: 0,
+  opacity: 0.99,
+  backgroundColor: "transparent",
+});
+
 // Create dynamic styles based on the screen size
-const getTabBarBackgroundStyle = () => {
-  const {width, height} = Dimensions.get('window');
-  const isLandscape = width > height;
+const getTabBarBackgroundStyle = (width, height, isTablet, isLandscape) => {
   if (width <= smallDeviceWidth) {
     // Styles for small devices
     return {
       width: width * 1.5,
-      height: height * 0.22,
-      position: 'absolute',
+      height: height * 0.175,
+      position: "absolute",
       left: -(width * 0.25),
-      bottom: -(height * 0.069),
+      bottom: -(height * 0.045),
     };
   } else if (width > smallDeviceWidth && width <= mediumDeviceWidth) {
     // Styles for medium devices
     return {
       width: width * 1.5,
-      height: Platform.OS === 'ios' ? height * 0.2 : height * 0.18,
-      position: 'absolute',
+      height: Platform.OS === "ios" ? height * 0.2 : height * 0.18,
+      position: "absolute",
       left: -(width * 0.25),
       bottom: -(height * 0.05),
     };
   } else {
     // Styles for large devices (tablet)
     return {
-      width: tablet && isLandscape ? width * 1.5 : width * 1.5,
-      height: isLandscape ? height * 0.195 : height * 0.16,
-      position: 'absolute',
+      width: isTablet && isLandscape ? width * 1.5 : width * 1.5,
+      height: isLandscape
+        ? height * 0.195
+        : isTablet
+        ? height * 0.16
+        : height * 0.2,
+      position: "absolute",
       left: -(width * 0.25),
       bottom: -(height * 0.06),
     };
   }
 };
 
-const getSearchTabButtonContainerStyle = () => {
+const getSearchTabButtonContainerStyle = (width, height, isTablet) => {
   if (width <= smallDeviceWidth) {
     // Styles for small devices
     return {
       flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      marginTop: Platform.OS === 'ios' ? -80 : -65, // Adjusted for small devices
+      justifyContent: "center",
+      alignItems: "center",
+      marginTop: Platform.OS === "ios" ? -80 : -65, // Adjusted for small devices
     };
   } else if (width > smallDeviceWidth && width <= mediumDeviceWidth) {
     // Styles for medium devices
     return {
       flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      marginTop: Platform.OS === 'ios' ? -10 : -65, // Adjusted for medium devices
+      justifyContent: "center",
+      alignItems: "center",
+      marginTop: Platform.OS === "ios" ? -10 : -65, // Adjusted for medium devices
     };
   } else {
     // Styles for large devices
     return {
       flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      marginTop: Platform.OS === 'ios' ? -50 : -65, // Adjusted for large devices
+      justifyContent: "center",
+      alignItems: "center",
+      marginTop: Platform.OS === "ios" ? -50 : -85, // Adjusted for large devices
     };
   }
 };
 
 // Bottom Tab Navigator
 const MainTabNavigator = () => {
+  const { width, height, isTablet, isLandscape } = useDeviceInfo();
+
   return (
     <Tab.Navigator
-      screenOptions={({route}) => ({
+      screenOptions={({ route }) => ({
         headerShown: false,
-        tabBarIcon: ({focused}) => {
+        tabBarIcon: ({ focused }) => {
           let icon;
-          if (route.name === 'Home') {
+          if (route.name === "Home") {
             icon = focused ? HomeIconActive : HomeIconInactive;
-          } else if (route.name === 'Assets') {
+          } else if (route.name === "Assets") {
             icon = focused ? AssetsIconActive : AssetsIconInactive;
-          } else if (route.name === 'Search') {
+          } else if (route.name === "Search") {
             icon = SearchIconActive;
-          } else if (route.name === 'Location') {
+          } else if (route.name === "Location") {
             icon = focused ? LocationIconActive : LocationIconInactive;
-          } else if (route.name === 'Profile') {
+          } else if (route.name === "Profile") {
             icon = focused ? ProfileIconActive : ProfileIconInactive;
           }
           return (
             <Image
               source={icon}
               style={{
-                width: tablet ? 40 : 30,
-                height: tablet ? 40 : 30,
-                resizeMode: 'contain',
+                width: isTablet ? 40 : 30,
+                height: isTablet ? 40 : 30,
+                resizeMode: "contain",
               }}
             />
           );
         },
-        tabBarActiveTintColor: '#EF652B',
-        tabBarInactiveTintColor: '#5f6368',
+        tabBarActiveTintColor: "#EF652B",
+        tabBarInactiveTintColor: "#5f6368",
         tabBarLabelStyle: {
           fontSize: 12,
-          fontWeight: '600',
+          fontWeight: "600",
           marginTop:
-            Platform.OS === 'ios' ? -10 : StatusBar.currentHeight > 0 ? 8 : 2,
+            Platform.OS === "ios" ? -10 : Platform.Version <= 34 ? -8 : 8,
           marginBottom:
-            Platform.OS === 'android'
-              ? StatusBar.currentHeight > 0
+            Platform.OS === "android"
+              ? Platform.Version <= 34 > 0
                 ? 6
-                : 6
+                : 16
               : 0,
-          marginLeft: Platform.OS === 'ios' && tablet ? 1 : 0,
+          marginLeft: Platform.OS === "ios" && isTablet ? 1 : 0,
         },
-        tabBarStyle: styles.tabBarStyle,
+        tabBarStyle: getTabBarStyle(width, height, isTablet),
         tabBarBackground: () => {
-          const dynamicStyle = getTabBarBackgroundStyle();
+          const dynamicStyle = getTabBarBackgroundStyle(
+            width,
+            height,
+            isTablet,
+            isLandscape
+          );
           return (
             <Image
               source={CurvedBackground}
@@ -187,10 +248,15 @@ const MainTabNavigator = () => {
             />
           );
         },
-        tabBarButton: props => {
-          if (route.name === 'Search') {
+        tabBarButton: (props) => {
+          if (route.name === "Search") {
             return (
-              <View style={styles.searchTabButtonContainer}>
+              <View
+                style={[
+                  styles.searchTabButtonContainer,
+                  getSearchTabButtonContainerStyle(width, height, isTablet),
+                ]}
+              >
                 <ButtonComponent
                   {...props}
                   // background={TouchableNativeFeedback.Ripple("#fff", true)}
@@ -213,23 +279,24 @@ const MainTabNavigator = () => {
             </ButtonComponent>
           );
         },
-      })}>
+      })}
+    >
       <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen
         name="Assets"
         component={AssetsScreen}
-        options={{unmountOnBlur: true}}
+        options={{ unmountOnBlur: true }}
       />
       <Tab.Screen name="Search" component={SearchScreen} />
       <Tab.Screen
         name="Location"
         component={LocationScreen}
-        options={{unmountOnBlur: true}}
+        options={{ unmountOnBlur: true }}
       />
       <Tab.Screen
         name="Profile"
         component={ProfileScreen}
-        options={{unmountOnBlur: true}}
+        options={{ unmountOnBlur: true }}
       />
     </Tab.Navigator>
   );
@@ -267,30 +334,6 @@ const AppNavigator = () => {
   return (
     <SafeAreaProvider>
       <DataRefreshProvider>
-        {/* <Text style={{ marginTop: 60 }}>
-          Device:{" "}
-          {formatDeviceId(
-            processBase64ManufacturerData(devices?.[0]?.manufacturerData)
-              ?.macAddressString
-          )}{" "}
-          : {devices?.[0]?.rssi}
-        </Text>
-        <Text>
-          Device:{" "}
-          {formatDeviceId(
-            processBase64ManufacturerData(devices?.[1]?.manufacturerData)
-              ?.macAddressString
-          )}{" "}
-          : {devices?.[1]?.rssi}
-        </Text>
-        <Text>
-          Device:{" "}
-          {formatDeviceId(
-            processBase64ManufacturerData(devices?.[2]?.manufacturerData)
-              ?.macAddressString
-          )}{" "}
-          : {devices?.[2]?.rssi}
-        </Text> */}
         <NavigationContainer>
           <Stack.Navigator screenOptions={{headerShown: false}}>
             {/* <Stack.Screen name="LogoScreen" component={LogoScreen} /> */}
@@ -356,43 +399,43 @@ const AppNavigator = () => {
 
 const styles = StyleSheet.create({
   tabBarStyle: {
-    height: Platform.OS === 'ios' ? 80 : 50,
+    height: Platform.OS === "ios" ? 80 : 60,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    position: 'absolute',
+    position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: 'transparent', // Ensure transparency to show the background image
+    opacity: 0.99,
+    backgroundColor: "transparent",
   },
   tabBarBackground: {
     ...getTabBarBackgroundStyle(),
-    position: 'absolute',
+    position: "absolute",
   },
   tabButton: {
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     flex: 1,
-    height: Platform.OS === 'ios' ? 60 : 40,
+    height: Platform.OS === "ios" ? 60 : 55,
   },
   searchTabButtonContainer: {
-    position: 'relative', // Allow custom positioning of elements within
-    marginTop: -30,
+    position: "relative", // Allow custom positioning of elements within
     ...getSearchTabButtonContainerStyle(),
   },
   searchTab: {
-    backgroundColor: '#EF652B',
+    backgroundColor: "#EF652B",
     width: 65,
     height: 65,
     borderRadius: 35,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   customSearchIconContainer: {
-    position: 'absolute',
+    position: "absolute",
     top: 15, // Adjust the position relative to the tab bar
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   customSearchIcon: {
     width: 35, // Adjust as needed

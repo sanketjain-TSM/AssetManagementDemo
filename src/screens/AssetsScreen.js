@@ -216,7 +216,7 @@ const styles = StyleSheet.create({
         : StatusBar.currentHeight
         ? StatusBar.currentHeight
         : 30,
-    // backgroundColor: '#F9F9F9',
+    backgroundColor: '#F9F9F9',
   },
   headerContainer: {
     backgroundColor: '#FFFFFF',

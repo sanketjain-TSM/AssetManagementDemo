@@ -352,18 +352,20 @@ const DynamicInputField = React.memo(
       [tablet, validationColor, editable, useAddEdit, useDropdown, open],
     );
 
-    // Global dropdown management
+    // Add ref to dropdown button
+    const buttonRef = useRef(null);
+    const [coords, setCoords] = useState(null);
+
     const handleDropdownToggle = useCallback(() => {
       if (open) {
         setOpen(false);
         globalDropdownOpen = null;
       } else {
-        // Close any other open dropdown
-        if (globalDropdownOpen && globalDropdownOpen !== storageKey) {
-          globalDropdownOpen = null;
-        }
-        setOpen(true);
-        globalDropdownOpen = storageKey || 'default';
+        buttonRef.current?.measureInWindow((x, y, width, height) => {
+          setCoords({x, y, width, height});
+          setOpen(true);
+          globalDropdownOpen = storageKey || 'default';
+        });
       }
     }, [open, storageKey]);
 
@@ -754,9 +756,11 @@ const DynamicInputField = React.memo(
             <Text style={styles.label}>{label}</Text>
             <View style={styles.dropdownWrapper}>
               <TouchableOpacity
+                ref={buttonRef} 
                 style={styles.dropdownButton}
                 onPress={handleDropdownToggle}
                 disabled={!editable}>
+                  
                 <Text
                   style={[
                     styles.dropdownText,
@@ -775,9 +779,41 @@ const DynamicInputField = React.memo(
                 </Text>
               </TouchableOpacity>
 
-              {open && (
-                <TouchableWithoutFeedback onPress={e => e.stopPropagation()}>
-                  <View style={styles.dropdownList}>
+              {open && coords && (
+                <Modal
+                  visible={open}
+                  transparent
+                  animationType="none"
+                  statusBarTranslucent
+                  onRequestClose={() => {
+                    setOpen(false);
+                    globalDropdownOpen = null;
+                  }}>
+                  <TouchableWithoutFeedback
+                    onPress={() => {
+                      setOpen(false);
+                      globalDropdownOpen = null;
+                    }}>
+                    <View style={StyleSheet.absoluteFillObject} />
+                  </TouchableWithoutFeedback>
+
+                  <View
+                    style={{
+                      position: 'absolute',
+                      top: coords.y + coords.height + 4,
+                      left: coords.x,
+                      width: coords.width,
+                      maxHeight: 200,
+                      backgroundColor: '#fff',
+                      borderWidth: 1,
+                      borderColor: validationColor,
+                      borderRadius: 8,
+                      elevation: 15,
+                      shadowColor: '#000',
+                      shadowOffset: {width: 0, height: 4},
+                      shadowOpacity: 0.25,
+                      shadowRadius: 8,
+                    }}>
                     <FlatList
                       data={items}
                       keyExtractor={item => item.value.toString()}
@@ -801,10 +837,11 @@ const DynamicInputField = React.memo(
                           </Text>
                         </TouchableOpacity>
                       )}
-                      nestedScrollEnabled={true}
+                      nestedScrollEnabled
+                      keyboardShouldPersistTaps="handled"
                     />
                   </View>
-                </TouchableWithoutFeedback>
+                </Modal>
               )}
             </View>
             <ValidationMessage />

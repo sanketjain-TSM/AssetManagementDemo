@@ -27,6 +27,7 @@ import {useDataRefresh} from '../context/DataRefreshContext';
 import {useAssetRefresh} from '../utils/useAssetRefresh';
 import {SixBarIndicatorSignalmeter} from '../components/SixBarIndicatorSignalmeter';
 import {Dimensions} from 'react-native';
+import { apiKeys } from '../config';
 
 const {width: screenWidth} = Dimensions.get('window');
 const isTablet = screenWidth >= 768;
@@ -353,8 +354,8 @@ const AssetDetailsScreen = ({route}) => {
     try {
       const token = await AsyncStorage.getItem('token');
       const response = await axios.get(
-        `http://api.matorg.com:8000/v1/assets/description/all?description=${encodeURIComponent(
-          asset?.description,
+        `${apiKeys.BASE_URL}/assets/description/all?description=${encodeURIComponent(
+          asset?.description
         )}&skip=${skip}&limit=${limit}`,
         {
           headers: {
@@ -458,7 +459,7 @@ const AssetDetailsScreen = ({route}) => {
       const token = await AsyncStorage.getItem('token');
 
       await axios.delete(
-        `https://api.matorg.com/v1/assets/delete-asset/${assetToDelete?.id}`,
+        `${apiKeys.BASE_URL}/assets/delete-asset/${assetToDelete?.id}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

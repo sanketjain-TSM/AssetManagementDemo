@@ -5,15 +5,12 @@ import {
   FlatList,
   Image,
   StyleSheet,
-  Keyboard,
-  Platform,
   Dimensions,
-} from "react-native";
-import { TouchableWithoutFeedback } from "react-native-gesture-handler";
+} from "react-native";  
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import ImagesEnum from "../shared/ImagesEnum";
 import { formatDateTime } from "../utils/formatDateTime";
 import { SixBarIndicatorSignalmeter } from "../components/SixBarIndicatorSignalmeter";
+import { getImageName } from "../utils/normalizeDescriptionName";
 
 const { width: screenWidth } = Dimensions.get("window");
 const isTablet = screenWidth >= 768;
@@ -36,6 +33,7 @@ const SearchResultsScreen = ({ searchResults }) => {
 
   const ordinalSuffixOf = (i) => {
     if (i?.toString()?.toLowerCase() === "notinzone") return i;
+    if (isNaN(Number(i))) return i;
     i = Number(i);
     let j = i % 10,
       k = i % 100;
@@ -52,7 +50,7 @@ const SearchResultsScreen = ({ searchResults }) => {
       <View style={styles.resultItem}>
         <View style={styles.topSection}>
           <Image
-            source={ImagesEnum?.[item?.description]}
+            source={{uri: getImageName(item?.description)}}
             style={styles.deviceImage}
           />
           <View style={styles.resultInfo}>
@@ -109,23 +107,28 @@ const SearchResultsScreen = ({ searchResults }) => {
   };
 
   return (
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-      <View style={styles.container}>
-        <FlatList
-          data={searchResults}
-          renderItem={renderResultItem}
-          keyExtractor={(item, index) => `${item.id}-${index}`}
-          initialNumToRender={10}
-          windowSize={5}
-        />
-      </View>
-    </TouchableWithoutFeedback>
+    <View style={styles.container}>
+      <FlatList
+        data={searchResults}
+        renderItem={renderResultItem}
+        keyExtractor={(item, index) => `${item.id}-${index}`}
+        initialNumToRender={10}
+        windowSize={5}
+        style={{ flex: 1 }} 
+        contentContainerStyle={{
+          paddingTop: scaleSize(16),
+          paddingHorizontal: scaleSize(16),
+          paddingBottom: scaleSize(80),
+        }}
+        showsVerticalScrollIndicator={true}
+      />
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    padding: scaleSize(16),
+    flex: 1,
     backgroundColor: "#F9F9F9",
   },
   resultItem: {

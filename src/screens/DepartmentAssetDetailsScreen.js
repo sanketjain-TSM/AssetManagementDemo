@@ -33,6 +33,7 @@ import {HzSignalStrengthMeter} from '../components/HzSignalStrengthMeter';
 import {FourBarSignalMeter} from '../components/FourBarSignalMeter';
 import {SixBarSignalMeter} from '../components/SixBarSignalMeter';
 import {SixBarIndicatorSignalmeter} from '../components/SixBarIndicatorSignalmeter';
+import { apiKeys } from '../config';
 
 const {width: screenWidth} = Dimensions.get('window');
 const isTablet = screenWidth >= 768;
@@ -365,7 +366,7 @@ const DepartmentAssetDetailsScreen = ({route}) => {
       const token = await AsyncStorage.getItem('token');
 
       const response = await axios.get(
-        `http://api.matorg.com:8000/v1/assets/floor/${floor}/${encodeURIComponent(
+        `${apiKeys.BASE_URL}/assets/floor/${floor}/${encodeURIComponent(
           departmentName,
         )}/${zoneId}/${encodeURIComponent(
           asset?.description,
@@ -484,7 +485,7 @@ const DepartmentAssetDetailsScreen = ({route}) => {
 
       // Replace with your actual delete API endpoint
       await axios.delete(
-        `https://api.matorg.com/v1/assets/delete-asset/${assetToDelete?.id}`,
+        `${apiKeys.BASE_URL}/assets/delete-asset/${assetToDelete?.id}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

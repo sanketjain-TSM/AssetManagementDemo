@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {
   StyleSheet,
   View,
@@ -8,244 +8,137 @@ import {
   ActivityIndicator,
   Dimensions,
   Platform,
+  Modal,
+  TouchableWithoutFeedback,
 } from 'react-native';
-import {TouchableWithoutFeedback} from 'react-native';
 
 const {width: screenWidth, height: screenHeight} = Dimensions.get('window');
-const widthPercentageToDP = widthPercent =>
-  (screenWidth * parseFloat(widthPercent)) / 100;
-const heightPercentageToDP = heightPercent =>
-  (screenHeight * parseFloat(heightPercent)) / 100;
 const isTablet = () => screenWidth >= 768 && screenHeight / screenWidth < 1.6;
 
-// Global dropdown state management
 let globalDropdownOpen = null;
 
 const EnhancedDropdown = ({
   label,
   value,
   onSelect,
-  items,
+  items = [],
   placeholder,
   onAddNew,
   onEdit,
   loading = false,
+  dropdownId = 'assetDescription',
+  maxListHeight = 300,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const tablet = isTablet();
+  const [coords, setCoords] = useState(null);
+  const buttonWrapperRef = useRef(null);
 
-  const selectedItem = items.find(item => item.value === value);
+  const selectedItem = items.find(i => i.value === value);
+
+  const openDropdown = () => {
+    if (globalDropdownOpen && globalDropdownOpen !== dropdownId) {
+      globalDropdownOpen = null;
+    }
+
+    try {
+      buttonWrapperRef.current?.measureInWindow((x, y, width, height) => {
+        setCoords({x, y, width, height});
+        setIsOpen(true);
+        globalDropdownOpen = dropdownId;
+      });
+    } catch (e) {
+      setCoords(null);
+      setIsOpen(true);
+      globalDropdownOpen = dropdownId;
+    }
+  };
+
+  const closeDropdown = () => {
+    setIsOpen(false);
+    globalDropdownOpen = null;
+  };
+
+  useEffect(() => {
+    if (globalDropdownOpen && globalDropdownOpen !== dropdownId && isOpen) {
+      setIsOpen(false);
+    }
+  }, [globalDropdownOpen, dropdownId, isOpen]);
 
   const handleItemPress = item => {
     if (item.isAddNew) {
-      onAddNew();
+      onAddNew?.();
     } else {
-      onSelect(item.value);
-      setIsOpen(false);
-      globalDropdownOpen = null;
+      onSelect?.(item.value);
     }
+    closeDropdown();
   };
 
-  // Global dropdown management
-  const handleDropdownToggle = () => {
-    if (isOpen) {
-      setIsOpen(false);
-      globalDropdownOpen = null;
-    } else {
-      // Close any other open dropdown
-      if (globalDropdownOpen && globalDropdownOpen !== 'assetDescription') {
-        globalDropdownOpen = null;
-      }
-      setIsOpen(true);
-      globalDropdownOpen = 'assetDescription';
+  const computeListStyle = () => {
+    if (!coords) {
+      const width = Math.min(360, screenWidth - 32);
+      return {
+        containerStyle: {
+          left: (screenWidth - width) / 2,
+          top: Math.max(
+            24,
+            (screenHeight - Math.min(maxListHeight, items.length * 48)) / 2,
+          ),
+          width,
+        },
+        listMaxHeight: Math.min(maxListHeight, screenHeight - 48),
+      };
     }
+
+    const spaceBelow = screenHeight - (coords.y + coords.height) - 8;
+    const spaceAbove = coords.y - 8;
+    const openUp = spaceBelow < 160 && spaceAbove > spaceBelow;
+    const available = openUp ? spaceAbove : spaceBelow;
+    const listMax = Math.min(maxListHeight, Math.max(120, available));
+    const width = Math.min(coords.width, screenWidth - 16);
+
+    const top = openUp ? coords.y - listMax - 4 : coords.y + coords.height + 4;
+
+    const boundedTop = Math.max(8, Math.min(top, screenHeight - listMax - 8));
+
+    return {
+      containerStyle: {
+        left: Math.max(8, Math.min(coords.x, screenWidth - width - 8)),
+        top: boundedTop,
+        width,
+      },
+      listMaxHeight: listMax,
+    };
   };
 
-  // Close dropdown when another one opens
-  useEffect(() => {
-    if (
-      globalDropdownOpen &&
-      globalDropdownOpen !== 'assetDescription' &&
-      isOpen
-    ) {
-      setIsOpen(false);
-    }
-  }, [globalDropdownOpen, isOpen]);
-
-  // Close dropdown on outside click
-  const handleOutsideClick = () => {
-    if (isOpen) {
-      setIsOpen(false);
-      globalDropdownOpen = null;
-    }
-  };
-
-  const styles = StyleSheet.create({
-    container: {
-      marginBottom: 20,
-      // Add z-index to the container when dropdown is open
-      zIndex: isOpen ? 9999 : 1,
-      elevation: isOpen ? 10 : 1,
-    },
-    label: {
-      fontSize: tablet ? 16 : 14,
-      fontWeight: '500',
-      marginBottom: 8,
-      color: '#333',
-    },
-    // Add relative positioning to the dropdown wrapper
-    dropdownWrapper: {
-      position: 'relative',
-      zIndex: isOpen ? 9999 : 1,
-      backgroundColor: '#fff',
-    },
-    dropdownButton: {
-      borderWidth: 1,
-      borderColor: '#ddd',
-      borderRadius: 8,
-      paddingHorizontal: 15,
-      paddingVertical: tablet ? 15 : 12,
-      backgroundColor: '#fff',
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      // When dropdown is open, modify border radius to connect with dropdown
-      ...(isOpen && {
-        borderBottomLeftRadius: 0,
-        borderBottomRightRadius: 0,
-        borderBottomColor: 'transparent',
-      }),
-    },
-    dropdownText: {
-      fontSize: tablet ? 16 : 14,
-      color: selectedItem ? '#333' : '#999',
-      flex: 1,
-    },
-    dropdownArrow: {
-      width: 12,
-      height: 12,
-      tintColor: '#666',
-    },
-    dropdownList: {
-      position: 'absolute',
-      top: '100%',
-      left: 0,
-      right: 0,
-      backgroundColor: '#ffffff',
-      borderWidth: 1,
-      borderColor: '#ddd',
-      borderTopWidth: 0, // Remove top border to connect with button
-      borderBottomLeftRadius: 8,
-      borderBottomRightRadius: 8,
-      marginTop: 0, // Remove gap to make it connected
-      maxHeight: 200,
-      zIndex: 99999,
-      elevation: 15,
-      shadowColor: '#000',
-      shadowOffset: {width: 0, height: 4},
-      shadowOpacity: 0.25,
-      shadowRadius: 8,
-      // Platform specific shadow
-      ...(Platform.OS === 'ios' && {
-        shadowColor: '#000',
-        shadowOffset: {width: 0, height: 4},
-        shadowOpacity: 0.25,
-        shadowRadius: 8,
-      }),
-      ...(Platform.OS === 'android' && {
-        elevation: 15,
-      }),
-    },
-    dropdownItem: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      paddingHorizontal: 15,
-      paddingVertical: 12,
-      borderBottomWidth: 1,
-      borderBottomColor: '#f0f0f0',
-      backgroundColor: '#ffffff',
-    },
-    lastDropdownItem: {
-      borderBottomWidth: 0,
-    },
-    addNewItem: {
-      backgroundColor: '#f8f9fa',
-      borderTopWidth: 1,
-      borderTopColor: '#e9ecef',
-    },
-    dropdownItemText: {
-      fontSize: tablet ? 16 : 14,
-      color: '#333',
-      flex: 1,
-    },
-    addNewText: {
-      color: '#EF652B',
-      fontWeight: '500',
-    },
-    editButton: {
-      backgroundColor: '#EF652B',
-      paddingHorizontal: 12,
-      paddingVertical: 6,
-      borderRadius: 4,
-      marginLeft: 10,
-    },
-    editButtonText: {
-      color: '#fff',
-      fontSize: tablet ? 12 : 10,
-      fontWeight: '500',
-    },
-    selectedItem: {
-      backgroundColor: '#f0f8ff',
-    },
-    loadingContainer: {
-      padding: 20,
-      alignItems: 'center',
-      backgroundColor: '#ffffff',
-    },
-    // Overlay to capture outside clicks
-    overlay: {
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      zIndex: 9998,
-    },
-  });
+  const {containerStyle, listMaxHeight} = computeListStyle();
 
   const dropdownItems = [
-    {
-      label: '+ Add New Description',
-      value: 'add_new',
-      isAddNew: true,
-    },
+    {label: '+ Add New Description', value: 'add_new', isAddNew: true},
     ...items,
   ];
 
   return (
     <>
-      {/* Overlay to handle outside clicks */}
-      {isOpen && (
-        <TouchableWithoutFeedback onPress={handleOutsideClick}>
-          <View style={StyleSheet.absoluteFillObject} />
-        </TouchableWithoutFeedback>
-      )}
-
-      <View style={styles.container}>
+      <View style={[styles.container, {zIndex: isOpen ? 9999 : 1}]}>
         <Text style={styles.label}>{label}</Text>
-        <View style={styles.dropdownWrapper}>
+
+        {/* wrapper we measure */}
+        <View ref={buttonWrapperRef} collapsable={false}>
           <TouchableOpacity
-            style={styles.dropdownButton}
-            onPress={handleDropdownToggle}
+            style={[styles.button, isOpen && styles.buttonOpen]}
+            onPress={() => {
+              if (isOpen) closeDropdown();
+              else openDropdown();
+            }}
+            activeOpacity={0.8}
             disabled={loading}>
             <Text
               style={[
-                styles.dropdownText,
+                styles.buttonText,
                 {color: selectedItem ? '#333' : '#999'},
               ]}>
               {selectedItem ? selectedItem.label : placeholder}
             </Text>
-            {/* Add a simple arrow indicator */}
             <Text
               style={{
                 fontSize: 16,
@@ -255,54 +148,194 @@ const EnhancedDropdown = ({
               ▼
             </Text>
           </TouchableOpacity>
-
-          {isOpen && (
-            <TouchableWithoutFeedback onPress={e => e.stopPropagation()}>
-              <View style={styles.dropdownList}>
-                {loading ? (
-                  <View style={styles.loadingContainer}>
-                    <ActivityIndicator size="small" color="#EF652B" />
-                  </View>
-                ) : (
-                  <FlatList
-                    data={dropdownItems}
-                    keyExtractor={item => item.value.toString()}
-                    renderItem={({item, index}) => (
-                      <TouchableOpacity
-                        style={[
-                          styles.dropdownItem,
-                          index === dropdownItems.length - 1 &&
-                            styles.lastDropdownItem,
-                          item.isAddNew && styles.addNewItem,
-                          item.value === value && styles.selectedItem,
-                        ]}
-                        onPress={() => handleItemPress(item)}>
-                        <Text
-                          style={[
-                            styles.dropdownItemText,
-                            item.isAddNew && styles.addNewText,
-                          ]}>
-                          {item.label}
-                        </Text>
-                        {!item.isAddNew && (
-                          <TouchableOpacity
-                            style={styles.editButton}
-                            onPress={() => onEdit(item)}>
-                            <Text style={styles.editButtonText}>Edit</Text>
-                          </TouchableOpacity>
-                        )}
-                      </TouchableOpacity>
-                    )}
-                    nestedScrollEnabled={true}
-                  />
-                )}
-              </View>
-            </TouchableWithoutFeedback>
-          )}
         </View>
       </View>
+
+      {/* Modal portal for dropdown list so it sits above everything and receives touches */}
+      <Modal
+        visible={isOpen}
+        transparent
+        animationType="none"
+        statusBarTranslucent={true}
+        onRequestClose={closeDropdown}>
+        {/* overlay to dismiss when tapping outside */}
+        <TouchableWithoutFeedback onPress={closeDropdown}>
+          <View style={styles.modalOverlay} />
+        </TouchableWithoutFeedback>
+
+        {/* positioned list */}
+        <View
+          style={[
+            styles.modalContainer,
+            containerStyle,
+            {maxHeight: listMaxHeight},
+          ]}>
+          <View style={styles.listBox}>
+            {loading ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="small" color="#EF652B" />
+              </View>
+            ) : (
+              <FlatList
+                data={dropdownItems}
+                keyExtractor={item => item.value.toString()}
+                renderItem={({item, index}) => (
+                  <View>
+                    <TouchableOpacity
+                      activeOpacity={0.7}
+                      style={[
+                        styles.item,
+                        index === dropdownItems.length - 1 && styles.lastItem,
+                        item.isAddNew && styles.addNewItem,
+                        item.value === value && styles.selectedItem,
+                      ]}
+                      onPress={() => handleItemPress(item)}>
+                      <Text
+                        style={[
+                          styles.itemText,
+                          item.isAddNew && styles.addNewText,
+                        ]}>
+                        {item.label}
+                      </Text>
+
+                      {/* edit button (does NOT close dropdown) */}
+                      {!item.isAddNew && (
+                        <TouchableOpacity
+                          style={styles.editButton}
+                          onPress={() => {
+                            onEdit?.(item);
+                          }}>
+                          <Text style={styles.editButtonText}>Edit</Text>
+                        </TouchableOpacity>
+                      )}
+                    </TouchableOpacity>
+                  </View>
+                )}
+                nestedScrollEnabled={true}
+                scrollEnabled
+                keyboardShouldPersistTaps="handled"
+                showsVerticalScrollIndicator={true}
+                contentContainerStyle={{paddingVertical: 4}}
+                style={{flexGrow: 0}}
+              />
+            )}
+          </View>
+        </View>
+      </Modal>
     </>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    marginBottom: 20,
+  },
+  label: {
+    fontSize: isTablet() ? 18 : 16,
+    fontWeight: '500',
+    marginBottom: 8,
+    color: '#333',
+  },
+  button: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    paddingHorizontal: 15,
+    paddingVertical: 12,
+    backgroundColor: '#fff',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  buttonOpen: {
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
+  },
+  buttonText: {
+    fontSize: isTablet() ? 16 : 14,
+    flex: 1,
+  },
+
+  modalOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'transparent',
+  },
+  modalContainer: {
+    position: 'absolute',
+
+    zIndex: 99999,
+    elevation: 20,
+    backgroundColor: 'transparent',
+  },
+  listBox: {
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    overflow: 'hidden',
+
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: 4},
+        shadowOpacity: 0.25,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 15,
+      },
+    }),
+  },
+
+  loadingContainer: {
+    padding: 16,
+    alignItems: 'center',
+    backgroundColor: '#fff',
+  },
+
+  item: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 15,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  lastItem: {
+    borderBottomWidth: 0,
+  },
+  addNewItem: {
+    backgroundColor: '#f8f9fa',
+  },
+  itemText: {
+    fontSize: 14,
+    color: '#333',
+    flex: 1,
+  },
+  addNewText: {
+    color: '#EF652B',
+    fontWeight: '500',
+  },
+  selectedItem: {
+    backgroundColor: '#f0f8ff',
+  },
+
+  editButton: {
+    backgroundColor: '#EF652B',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 4,
+    marginLeft: 10,
+  },
+  editButtonText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '500',
+  },
+});
 
 export default EnhancedDropdown;
