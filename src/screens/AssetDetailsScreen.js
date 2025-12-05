@@ -304,6 +304,21 @@ const AssetDetailsScreen = ({route}) => {
     fetchAssets();
   }, []);
 
+  // Monitor asset count and navigate back when it becomes zero
+  useEffect(() => {
+    if (currentTotalCount === 0 && assetsList.length === 0) {
+      console.log('Asset count is zero, navigating back');
+      Alert.alert('No Assets', 'All assets of this type have been deleted.', [
+        {
+          text: 'OK',
+          onPress: () => {
+            navigation.goBack();
+          },
+        },
+      ]);
+    }
+  }, [currentTotalCount, assetsList.length, navigation]);
+
   // Refresh when returning from edit screen
   useFocusEffect(
     React.useCallback(() => {

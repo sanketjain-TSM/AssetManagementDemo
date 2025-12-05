@@ -174,8 +174,9 @@ export default function UserProfileScreen() {
       justifyContent: 'space-between',
       width: '100%',
       marginBottom: tablet ? 25 : 20,
+      gap: 5,
     },
-    halfInputContainer: {flex: 1, paddingRight: 5},
+    halfInputContainer: {flex: 1, paddingRight: 0.75},
     label: {
       fontSize: tablet ? 18 : 16,
       fontWeight: '400',

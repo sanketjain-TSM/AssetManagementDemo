@@ -182,6 +182,12 @@ export default function DepartmentListScreen({route}) {
     }
   }, [floor, departmentName, zoneId]);
 
+  useEffect(() => {
+    if (assets.length === 0) {
+      navigation.goBack();
+    }
+  }, [assets]);
+
   // Listen for department refresh triggers
   useDepartmentRefresh(refreshDepartmentData);
 
@@ -319,6 +325,7 @@ export default function DepartmentListScreen({route}) {
         asset?.description?.toLowerCase()?.includes(searchTerm?.toLowerCase()),
       )
     : assets;
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>

@@ -105,7 +105,7 @@ export default function AddAssetScreen() {
     scrollContainer: {
       flexGrow: 1,
       backgroundColor: '#fff',
-      paddingTop: Platform.OS === 'ios' ? 40 : 0,
+      // paddingTop: Platform.OS === 'ios' ? 40 : 0,
       paddingHorizontal: tablet ? widthPercentageToDP(5) : 20,
     },
     loadingContainer: {
@@ -137,7 +137,7 @@ export default function AddAssetScreen() {
   }
 
   return (
-    <SafeAreaView style={{flex: 1}}>
+    <SafeAreaView style={{flex: 1, backgroundColor: '#fff'}}>
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
         <KeyboardAwareScrollView
           contentContainerStyle={styles.scrollContainer}
@@ -153,17 +153,17 @@ export default function AddAssetScreen() {
             deviceId={deviceId}
             assetId={assetId}
             assetDescription={assetDescription}
-            zone={zone}
+            assetLocation={zone}
             lastKnownLocation={lastKnownLocation}
             loading={loading}
             assetDescriptionOptions={assetDescriptionOptions}
-            zoneOptions={zoneOptions}
+            assetLocationOptions={zoneOptions}
             deviceIdValidationState={getDeviceIdValidationState()}
             deviceIdMessage={deviceIdMessage}
             onDeviceIdChange={handleDeviceIdChange}
             onAssetIdChange={setAssetId}
             onAssetDescriptionChange={setAssetDescription}
-            onZoneChange={setZone}
+            onAssetLocationChange={setZone}
             onLastKnownLocationChange={setLastKnownLocation}
             onSaveAsset={handleSaveAssetWithValidation}
             onAddNewDescription={handleAddNew}

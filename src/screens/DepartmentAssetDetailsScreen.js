@@ -519,6 +519,19 @@ const DepartmentAssetDetailsScreen = ({route}) => {
       Alert.alert('Error', 'Failed to delete asset. Please try again.');
     }
   };
+  useEffect(() => {
+    if (currentTotalCount === 0 && assetsList.length === 0) {
+      console.log('Asset count is zero, navigating back');
+      Alert.alert('No Assets', 'All assets of this type have been deleted.', [
+        {
+          text: 'OK',
+          onPress: () => {
+            navigation.goBack();
+          },
+        },
+      ]);
+    }
+  }, [currentTotalCount, assetsList.length, navigation]);
 
   const renderAssetItem = ({item, index}) => {
     const {formattedDate, formattedTime} = formatDateTime(item.lastSeenTime);

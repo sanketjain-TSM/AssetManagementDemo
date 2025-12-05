@@ -201,6 +201,7 @@ export default function AssetsScreen() {
 
 const baseFontSize = isTablet ? 18 : 14;
 const paddingSize = isTablet ? 24 : 16;
+const scaleSize = size => (isTablet ? size * 1.3 : size);
 
 const styles = StyleSheet.create({
   safeArea: {
@@ -290,8 +291,10 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   listContentContainer: {
-    paddingBottom: 80,
+    flex: 1,
     backgroundColor: '#F9F9F9',
+    marginTop: scaleSize(15),
+    padding: scaleSize(7),
   },
   searchNormalIcon: {
     opacity: 0.5,

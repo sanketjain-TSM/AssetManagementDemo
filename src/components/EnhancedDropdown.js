@@ -88,7 +88,7 @@ const EnhancedDropdown = ({
       elevation: isOpen ? 10 : 1,
     },
     label: {
-      fontSize: tablet ? 16 : 14,
+      fontSize: tablet ? 18 : 16,
       fontWeight: '500',
       marginBottom: 8,
       color: '#333',

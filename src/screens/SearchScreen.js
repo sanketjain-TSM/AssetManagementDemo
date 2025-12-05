@@ -59,6 +59,8 @@ const SearchScreen = () => {
   const handleSearch = useCallback(async query => {
     if (!query.trim()) {
       setSearchResults([]);
+      setSearchQuery('');
+      AsyncStorage.removeItem(`searchQuery-${userId}`);
       setLoading(false); // Stop loading if query is empty
       return;
     }

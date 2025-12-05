@@ -23,13 +23,13 @@ const AssetForm = ({
   deviceId,
   assetId,
   assetDescription,
-  zone,
+  assetLocation,
   lastKnownLocation,
   loading,
 
   // Master data
   assetDescriptionOptions,
-  zoneOptions,
+  assetLocationOptions,
 
   // Validation
   deviceIdValidationState,
@@ -39,7 +39,7 @@ const AssetForm = ({
   onDeviceIdChange,
   onAssetIdChange,
   onAssetDescriptionChange,
-  onZoneChange,
+  onAssetLocationChange,
   onLastKnownLocationChange,
   onSaveAsset,
   onAddNewDescription,
@@ -117,25 +117,25 @@ const AssetForm = ({
       />
 
       <DynamicInputField
-        label="Zone"
-        value={zone}
-        onChangeText={onZoneChange}
-        placeholder="Select zone"
+        label="Asset Location"
+        value={assetLocation}
+        onChangeText={onAssetLocationChange}
+        placeholder="Select asset location"
         useDropdown={true}
-        dropdownItems={zoneOptions}
+        dropdownItems={assetLocationOptions}
       />
 
-      <DynamicInputField
+      {/* <DynamicInputField
         label="Last Known Location"
         value={lastKnownLocation}
         onChangeText={onLastKnownLocationChange}
         placeholder={
-          zone
-            ? 'Location will be auto-filled based on zone'
-            : 'Select a zone first'
+          assetLocation
+            ? 'Location will be auto-filled based on asset location'
+            : 'Select a asset location first'
         }
         editable={false}
-      />
+      /> */}
 
       <TouchableOpacity
         style={[styles.button, loading && styles.buttonDisabled]}

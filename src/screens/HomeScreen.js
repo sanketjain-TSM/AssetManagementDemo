@@ -44,7 +44,7 @@ const HomeScreen = () => {
       try {
         const userId = await AsyncStorage.getItem('savedEmail');
         const storedQuery = await AsyncStorage.getItem(`searchQuery-${userId}`);
-        if (storedQuery) {
+        if (storedQuery || searchQuery) {
           setSearchQuery(storedQuery);
           fetchSearchResults(storedQuery);
         }
@@ -59,20 +59,25 @@ const HomeScreen = () => {
   // Refresh search results when returning to screen
   useFocusEffect(
     React.useCallback(() => {
-      if (searchQuery.trim() && !isInitialMount.current) {
-        // Clear current results and fetch fresh data
-        setSearchResults([]);
-        setLoading(true);
+      // Skip on initial mount
+      if (isInitialMount.current) {
+        isInitialMount.current = false;
+        return;
+      }
+
+      // Only refresh if there's a search query and we're not already loading
+      if (searchQuery.trim() && !loading) {
+        console.log('Refreshing search results on focus');
         fetchSearchResults(searchQuery);
       }
-      // Mark that initial mount is complete
-      isInitialMount.current = false;
-    }, [searchQuery, fetchSearchResults]),
+    }, []), // Empty dependency array to prevent continuous refreshes
   );
 
   const fetchSearchResults = useCallback(async query => {
     if (!query.trim()) {
       setSearchResults([]);
+      setSearchQuery('');
+      AsyncStorage.removeItem(`searchQuery-${userId}`);
       setLoading(false);
       return;
     }
@@ -161,7 +166,7 @@ const HomeScreen = () => {
     if (searchQuery.trim()) {
       debouncedSearch(searchQuery);
     } else {
-      setSearchResults([]);
+      setSearchResults(p => []);
       setLoading(false);
 
       // Clear stored search data when search query is empty

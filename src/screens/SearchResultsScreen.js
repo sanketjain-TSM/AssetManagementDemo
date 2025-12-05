@@ -111,7 +111,7 @@ const SearchResultsScreen = React.memo(({searchResults}) => {
   const memoizedSearchResults = useMemo(() => searchResults, [searchResults]);
 
   return (
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+    // <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
       <View style={styles.container}>
         <FlatList
           data={memoizedSearchResults}
@@ -127,9 +127,15 @@ const SearchResultsScreen = React.memo(({searchResults}) => {
             offset: scaleSize(200) * index,
             index,
           })}
+            contentContainerStyle={{ paddingBottom: Platform.OS === 'ios' ? 30 : 60 }}
+          // contentContainerStyle={{
+          //   paddingTop: scaleSize(16),
+          //   paddingHorizontal: scaleSize(16),
+          //   paddingBottom: scaleSize(80),
+          // }}
         />
       </View>
-    </TouchableWithoutFeedback>
+    // </TouchableWithoutFeedback>
   );
 });
 
@@ -137,6 +143,8 @@ const styles = StyleSheet.create({
   container: {
     padding: scaleSize(16),
     backgroundColor: '#F9F9F9',
+    paddingBottom: 50,
+    flex: 1,
   },
   resultItem: {
     backgroundColor: '#FFFFFF',
