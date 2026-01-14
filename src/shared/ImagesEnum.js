@@ -25,6 +25,7 @@ const ImagesEnum = Object.freeze({
   "Ultrasound Units": Ultrasound_Surgical_Units,
   "Ultrasound Surgical Units": Ultrasound_Surgical_Units,
   "Infusion Pumps": Blood,
+  "infusion pumps": Blood,
   "Hypo/Hyperthermia": Hypo_Hyperthermia,
   "Endoscopes, CMAC": Endoscopes,
   "PhysiologicMonitorModule,Multi": PhysiologicMonitorModule,

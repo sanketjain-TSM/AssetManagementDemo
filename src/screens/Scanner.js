@@ -43,71 +43,79 @@ const scanner = () => {
   const requestBlePermissions = async () => {
     if (Platform.OS === "android") {
       try {
-        console.log("Requesting Android BLE permissions...");
-        const requiredPermissions = [
+        const granted = await PermissionsAndroid.requestMultiple([
           PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
           PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN,
           PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT,
-        ].filter(Boolean);
+          PermissionsAndroid.PERMISSIONS.BLUETOOTH_ADVERTISE,
+          PermissionsAndroid.PERMISSIONS.BLUETOOTH,
+        ]);
 
-        const granted = await PermissionsAndroid.requestMultiple(requiredPermissions);
-        console.log("Permission results:", granted);
-
-        // Check if all required permissions are granted
-        const allGranted = requiredPermissions.every(
-          (perm) => granted[perm] === PermissionsAndroid.RESULTS.GRANTED
-        );
-
-        if (allGranted) {
-          console.log("All required BLE permissions granted!");
+        if (
+          granted["android.permission.ACCESS_FINE_LOCATION"] ===
+            PermissionsAndroid.RESULTS.GRANTED &&
+          granted["android.permission.BLUETOOTH_SCAN"] ===
+            PermissionsAndroid.RESULTS.GRANTED &&
+          granted["android.permission.BLUETOOTH_CONNECT"] ===
+            PermissionsAndroid.RESULTS.GRANTED &&
+          granted["android.permission.BLUETOOTH_ADVERTISE"] ===
+            PermissionsAndroid.RESULTS.GRANTED &&
+          granted["android.permission.BLUETOOTH"] ===
+            PermissionsAndroid.RESULTS.GRANTED
+        ) {
+          console.log("BLE permissions granted!");
           return true;
         } else {
-          // Check for never_ask_again
-          const neverAskAgain = requiredPermissions.some(
-            (perm) => granted[perm] === PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN
-          );
-          if (neverAskAgain) {
-            alert(
-              "Some permissions are permanently denied. Please enable them in Settings > Apps > ChorusAssetManagementDemo > Permissions."
-            );
-          } else {
-            alert(
-              "Some required permissions were denied. BLE scanning will not work without them."
-            );
-          }
-          console.log("Some BLE permissions denied:", granted);
+          console.log("BLE permissions denied.");
           return false;
         }
       } catch (err) {
-        console.warn("Android permission request error:", err);
+        console.warn(err);
         return false;
       }
     } else if (Platform.OS === "ios") {
       try {
+        // const whenInUseGranted = await Geolocation.requestAuthorization(
+        //   "whenInUse"
+        // );
+        // if (whenInUseGranted !== "granted") {
+        //   startBackgroundLocation();
+        //   console.warn("WhenInUse permission denied");
+        //   return false; // Stop further processing if "whenInUse" is not granted
+        // }
+        // console.log(
+        //   "When In Use permission granted. Requesting Always Allow..."
+        // );
+
+        // const alwaysGranted = await Geolocation.requestAuthorization("always");
+        // console.log(alwaysGranted, "alwaysGranted");
+        // if (alwaysGranted !== "granted") {
+        //   console.warn("Always permission denied");
+        //   return false;
+        // }
+        const alwaysStatus = await check(PERMISSIONS.IOS.LOCATION_ALWAYS);
         const locationWhileInUse = await request(
           PERMISSIONS.IOS.LOCATION_WHEN_IN_USE
         );
-        
-        if (locationWhileInUse === RESULTS.GRANTED) {
-          // Request always permission after a delay
-          setTimeout(async () => {
-            try {
-              await request(PERMISSIONS.IOS.LOCATION_ALWAYS);
-            } catch (err) {
-              console.warn("Always permission request failed:", err);
-            }
-          }, 2000);
-          return true;
-        } else {
-          console.warn("Location permission denied");
-          return false;
-        }
+        // console.log("locationWhileInUse", locationWhileInUse);
+        // if (alwaysStatus !== RESULTS.GRANTED) {
+        setTimeout(async () => {
+          const alwaysRequest = await request(PERMISSIONS.IOS.LOCATION_ALWAYS);
+          // console.log("alwaysStatus", alwaysStatus);
+        }, 2000);
+        // console.log("alwaysStatus out side");
+        // if (alwaysRequest !== RESULTS.GRANTED) {
+        //   console.warn("Always Allow permission denied.");
+        //   return;
+        // }
+        // console.log("Always Allow permission granted.");
+        return true;
       } catch (err) {
-        console.warn("Permission request error:", err);
+        console.warn(err);
         return false;
       }
     }
-    return true; // Default fallback
+    return true; // iOS doesn't require explicit runtime permissions
   };
   const start = () => {
     if (subscription) {
@@ -133,14 +141,6 @@ const scanner = () => {
     try {
       console.log("Starting BLE scan...");
       const hasPermissions = await requestBlePermissions();
-      
-      if (!hasPermissions) {
-        console.error("Required permissions not granted. Cannot start BLE scan.");
-        observer.onError(new Error("Required permissions not granted"));
-        return;
-      }
-      
-      console.log("Permissions granted, starting device scan...");
       bleManager.startDeviceScan(
         // ["8EC90001-F315-4F60-9FB8-838830DAEA50"],
         null,

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, {useEffect, useState} from 'react';
 import {
   StyleSheet,
   View,
@@ -10,47 +10,47 @@ import {
   Alert,
   ActivityIndicator,
   Dimensions,
-} from "react-native";
-import { useNavigation } from "@react-navigation/native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import DropDownPicker from "react-native-dropdown-picker";
-import axios from "axios";
-import { RolesMap } from "../shared/rolesMap";
-import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+} from 'react-native';
+import {useNavigation} from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import DropDownPicker from 'react-native-dropdown-picker';
+import axios from 'axios';
+import {RolesMap} from '../shared/rolesMap';
+import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 
-const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
-const widthPercentageToDP = (widthPercent) =>
+const {width: screenWidth, height: screenHeight} = Dimensions.get('window');
+const widthPercentageToDP = widthPercent =>
   (screenWidth * parseFloat(widthPercent)) / 100;
-const heightPercentageToDP = (heightPercent) =>
+const heightPercentageToDP = heightPercent =>
   (screenHeight * parseFloat(heightPercent)) / 100;
 const isTablet = () => screenWidth >= 768 && screenHeight / screenWidth < 1.6;
 
 export default function UserProfileScreen() {
   const navigation = useNavigation();
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [hospitalId, setHospitalId] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState("");
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [hospitalId, setHospitalId] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [savedEmail, setSavedEmail] = useState();
   const [userRole, setUserRole] = useState();
   const [isEditable, setIsEditable] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [organizationId, setOrganizationId] = useState("brookdale");
+  const [organizationId, setOrganizationId] = useState('brookdale');
   const [open, setOpen] = useState(false);
   const [orgList, setOrgList] = useState([]);
-  const [role, setRole] = useState("");
+  const [role, setRole] = useState('');
   const tablet = isTablet();
 
   useEffect(() => {
     const checkLogin = async () => {
-      setFirstName(await AsyncStorage.getItem("firstName"));
-      setLastName(await AsyncStorage.getItem("lastName"));
-      setHospitalId(await AsyncStorage.getItem("hospitalId"));
-      setPhoneNumber(await AsyncStorage.getItem("phoneNumber"));
-      setSavedEmail(await AsyncStorage.getItem("savedEmail"));
-      setUserRole(await AsyncStorage.getItem("role"));
+      setFirstName(await AsyncStorage.getItem('firstName'));
+      setLastName(await AsyncStorage.getItem('lastName'));
+      setHospitalId(await AsyncStorage.getItem('hospitalId'));
+      setPhoneNumber(await AsyncStorage.getItem('phoneNumber'));
+      setSavedEmail(await AsyncStorage.getItem('savedEmail'));
+      setUserRole(await AsyncStorage.getItem('role'));
       setOrganizationId(
-        (await AsyncStorage.getItem("organization")) || "brookdale"
+        (await AsyncStorage.getItem('organization')) || 'brookdale',
       );
     };
     checkLogin();
@@ -62,7 +62,7 @@ export default function UserProfileScreen() {
   useEffect(() => {
     let isMounted = true;
     const fetchRole = async () => {
-      const role = await AsyncStorage.getItem("role");
+      const role = await AsyncStorage.getItem('role');
       if (isMounted) setRole(role);
     };
     fetchRole();
@@ -73,19 +73,16 @@ export default function UserProfileScreen() {
 
   const fetchOrgList = async () => {
     try {
-      const token = await AsyncStorage.getItem("token");
-      const response = await axios.get(
-        "http://35.223.244.137:8000/v1/user/orgs",
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const token = await AsyncStorage.getItem('token');
+      const response = await axios.get('https://api.matorg.com/v1/user/orgs', {
+        headers: {Authorization: `Bearer ${token}`},
+      });
       if (response.status === 200) {
         setOrgList(
-          Object.keys(response.data).map((org) => ({
+          Object.keys(response.data).map(org => ({
             label: org,
             value: response.data[org],
-          }))
+          })),
         );
       }
     } catch (error) {}
@@ -94,9 +91,9 @@ export default function UserProfileScreen() {
   const handleProfileChange = async () => {
     setLoading(true);
     try {
-      const token = await AsyncStorage.getItem("token");
+      const token = await AsyncStorage.getItem('token');
       const response = await axios.patch(
-        "http://35.223.244.137:8000/v1/auth/user/update",
+        'https://api.matorg.com/v1/auth/user/update',
         {
           firstName,
           lastName,
@@ -105,31 +102,31 @@ export default function UserProfileScreen() {
           organizationId,
         },
         {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+          headers: {Authorization: `Bearer ${token}`},
+        },
       );
       if (response.status === 200) {
-        Alert.alert("Success", "User Details changed successfully.", [
+        Alert.alert('Success', 'User Details changed successfully.', [
           {
-            text: "OK",
+            text: 'OK',
             onPress: () => {
               setIsEditable(false);
-              navigation.navigate("Profile");
+              navigation.navigate('Profile');
             },
           },
         ]);
         const updated = response.data.user;
         await AsyncStorage.multiSet([
-          ["firstName", updated.firstName],
-          ["lastName", updated.lastName],
-          ["hospitalId", updated.hospitalId],
-          ["phoneNumber", updated.phoneNumber || ""],
-          ["organization", updated.organizationId],
-          ["token", response.data.accessToken],
+          ['firstName', updated.firstName],
+          ['lastName', updated.lastName],
+          ['hospitalId', updated.hospitalId],
+          ['phoneNumber', updated.phoneNumber || ''],
+          ['organization', updated.organizationId],
+          ['token', response.data.accessToken],
         ]);
       }
     } catch (error) {
-      Alert.alert("Error", "Failed to update user details. Please try again.");
+      Alert.alert('Error', 'Failed to update user details. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -138,22 +135,22 @@ export default function UserProfileScreen() {
   const styles = StyleSheet.create({
     scrollContainer: {
       flexGrow: 1,
-      backgroundColor: "#fff",
-      paddingTop: Platform.OS === "ios" ? 40 : 0,
+      backgroundColor: '#fff',
+      paddingTop: Platform.OS === 'ios' ? 40 : 0,
       paddingHorizontal: tablet ? widthPercentageToDP(5) : 20,
     },
     header: {
-      flexDirection: "row",
-      alignItems: "center",
+      flexDirection: 'row',
+      alignItems: 'center',
       paddingVertical: tablet ? heightPercentageToDP(2) : 15,
     },
     headerText: {
       fontSize: tablet ? 26 : 20,
-      fontWeight: "600",
+      fontWeight: '600',
       flex: 1,
-      textAlign: "left",
+      textAlign: 'left',
     },
-    backButton: { marginLeft: tablet ? 20 : 15 },
+    backButton: {marginLeft: tablet ? 20 : 15},
     backArrow: {
       width: tablet ? 44 : 36,
       height: tablet ? 44 : 36,
@@ -162,7 +159,7 @@ export default function UserProfileScreen() {
     },
     profileContainer: {
       paddingVertical: tablet ? heightPercentageToDP(3) : 10,
-      alignItems: "center",
+      alignItems: 'center',
     },
     profileImage: {
       width: tablet ? 140 : 120,
@@ -171,17 +168,18 @@ export default function UserProfileScreen() {
       marginBottom: tablet ? 25 : 20,
       opacity: 0.85,
     },
-    inputContainer: { width: "100%", marginBottom: tablet ? 25 : 20 },
+    inputContainer: {width: '100%', marginBottom: tablet ? 25 : 20},
     inputContainerRow: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      width: "100%",
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      width: '100%',
       marginBottom: tablet ? 25 : 20,
+      gap: 5,
     },
-    halfInputContainer: { flex: 1, paddingRight: 5 },
+    halfInputContainer: {flex: 1, paddingRight: 0.75},
     label: {
       fontSize: tablet ? 18 : 16,
-      fontWeight: "400",
+      fontWeight: '400',
       marginBottom: 8,
     },
     input: {
@@ -189,69 +187,69 @@ export default function UserProfileScreen() {
       padding: 12,
       borderRadius: 5,
       fontSize: tablet ? 17 : 15,
-      fontWeight: "400",
-      color: "#0E0E0E",
+      fontWeight: '400',
+      color: '#0E0E0E',
       opacity: 0.5,
       borderWidth: 1,
-      borderColor: "#D9D9D9",
+      borderColor: '#D9D9D9',
     },
     enabledInput: {
       height: tablet ? 60 : 50,
       padding: 12,
       borderRadius: 5,
       fontSize: tablet ? 17 : 15,
-      fontWeight: "400",
-      color: "#0E0E0E",
+      fontWeight: '400',
+      color: '#0E0E0E',
       borderWidth: 1,
-      borderColor: "#D9D9D9",
+      borderColor: '#D9D9D9',
     },
     inputHalf: {
       height: tablet ? 60 : 50,
       padding: 12,
       borderRadius: 5,
       fontSize: tablet ? 17 : 15,
-      fontWeight: "400",
-      color: "#0E0E0E",
+      fontWeight: '400',
+      color: '#0E0E0E',
       opacity: 0.5,
       borderWidth: 1,
-      borderColor: "#D9D9D9",
+      borderColor: '#D9D9D9',
     },
     enabledInputHalf: {
       height: tablet ? 60 : 50,
       padding: 12,
       borderRadius: 5,
       fontSize: tablet ? 17 : 15,
-      fontWeight: "400",
-      color: "#0E0E0E",
+      fontWeight: '400',
+      color: '#0E0E0E',
       borderWidth: 1,
-      borderColor: "#D9D9D9",
+      borderColor: '#D9D9D9',
     },
     button: {
-      backgroundColor: "#EF652B",
+      backgroundColor: '#EF652B',
       paddingVertical: tablet ? 18 : 15,
       borderRadius: 8,
-      justifyContent: "center",
-      alignItems: "center",
-      alignSelf: "center",
+      justifyContent: 'center',
+      alignItems: 'center',
+      alignSelf: 'center',
       width: tablet ? widthPercentageToDP(90) : widthPercentageToDP(90),
       marginBottom: tablet ? heightPercentageToDP(4) : 40,
     },
     buttonText: {
-      color: "#FFF",
+      color: '#FFF',
       fontSize: tablet ? 20 : 18,
-      fontWeight: "400",
+      fontWeight: '400',
     },
     dropdown: {
-      backgroundColor: "#fff",
+      backgroundColor: '#fff',
       borderWidth: 1,
-      borderColor: "#D9D9D9",
+      borderColor: '#D9D9D9',
       borderRadius: 5,
       height: tablet ? 60 : 50,
     },
     dropdownDisabled: {
-      backgroundColor: "#F9F9F9",
+      backgroundColor: '#F9F9F9',
       borderWidth: 1,
-      borderColor: "#D9D9D9",
+      borderColor: '#D9D9D9',
       borderRadius: 5,
       opacity: 0.5,
       height: tablet ? 60 : 50,
@@ -263,15 +261,13 @@ export default function UserProfileScreen() {
       contentContainerStyle={styles.scrollContainer}
       enableOnAndroid
       extraScrollHeight={20}
-      extraHeight={100}
-    >
+      extraHeight={100}>
       <View style={styles.header}>
         <TouchableOpacity
-          onPress={() => navigation.navigate("Profile")}
-          style={styles.backButton}
-        >
+          onPress={() => navigation.navigate('Profile')}
+          style={styles.backButton}>
           <Image
-            source={require("../../assets/images/backArrow.png")}
+            source={require('../../assets/images/backArrow.png')}
             style={styles.backArrow}
           />
         </TouchableOpacity>
@@ -279,7 +275,7 @@ export default function UserProfileScreen() {
       </View>
       <View style={styles.profileContainer}>
         <Image
-          source={require("../../assets/images/blank.png")}
+          source={require('../../assets/images/blank.png')}
           style={styles.profileImage}
         />
         <View style={styles.inputContainerRow}>
@@ -288,7 +284,7 @@ export default function UserProfileScreen() {
             <TextInput
               style={!isEditable ? styles.inputHalf : styles.enabledInputHalf}
               value={
-                firstName ? firstName[0].toUpperCase() + firstName.slice(1) : ""
+                firstName ? firstName[0].toUpperCase() + firstName.slice(1) : ''
               }
               editable={isEditable}
               onChangeText={setFirstName}
@@ -299,7 +295,7 @@ export default function UserProfileScreen() {
             <TextInput
               style={!isEditable ? styles.inputHalf : styles.enabledInputHalf}
               value={
-                lastName ? lastName[0].toUpperCase() + lastName.slice(1) : ""
+                lastName ? lastName[0].toUpperCase() + lastName.slice(1) : ''
               }
               editable={isEditable}
               onChangeText={setLastName}
@@ -339,10 +335,10 @@ export default function UserProfileScreen() {
             onChangeText={setPhoneNumber}
           />
         </View>
-        {role === "superAdmin" && (
+        {role === 'superAdmin' && (
           <View style={styles.inputContainer}>
             <Text style={styles.label}>Organization</Text>
-            <View style={{ marginBottom: open ? 100 : 20, zIndex: 2000 }}>
+            <View style={{marginBottom: open ? 100 : 20, zIndex: 2000}}>
               <DropDownPicker
                 open={open}
                 value={organizationId}
@@ -351,7 +347,7 @@ export default function UserProfileScreen() {
                 setValue={setOrganizationId}
                 setItems={setOrgList}
                 disabled={!isEditable}
-                containerStyle={{ minHeight: 50 }}
+                containerStyle={{minHeight: 50}}
                 style={!isEditable ? styles.dropdownDisabled : styles.dropdown}
                 zIndex={3000}
                 zIndexInverse={1000}
@@ -360,17 +356,16 @@ export default function UserProfileScreen() {
           </View>
         )}
         <TouchableOpacity
-          style={[styles.button, loading && { backgroundColor: "#CCC" }]}
+          style={[styles.button, loading && {backgroundColor: '#CCC'}]}
           onPress={() =>
             !isEditable ? setIsEditable(true) : handleProfileChange()
           }
-          disabled={loading}
-        >
+          disabled={loading}>
           {loading ? (
             <ActivityIndicator size="small" color="#FFF" />
           ) : (
             <Text style={styles.buttonText}>
-              {!isEditable ? "Edit Profile" : "Save Changes"}
+              {!isEditable ? 'Edit Profile' : 'Save Changes'}
             </Text>
           )}
         </TouchableOpacity>

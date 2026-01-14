@@ -1,15 +1,15 @@
-import { useState, useEffect, useMemo } from "react";
-import { AppState, PermissionsAndroid, Platform } from "react-native";
-import scanner from "../screens/Scanner"; // Import your BLE scanner logic
-import { State } from "react-native-ble-plx";
-import { Buffer } from "buffer";
-import Geolocation from "react-native-geolocation-service";
-import axios from "axios";
-import { RESULTS } from "react-native-permissions";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import {useState, useEffect, useMemo} from 'react';
+import {AppState, PermissionsAndroid, Platform} from 'react-native';
+import scanner from '../screens/Scanner'; // Import your BLE scanner logic
+import {State} from 'react-native-ble-plx';
+import {Buffer} from 'buffer';
+import Geolocation from 'react-native-geolocation-service';
+import axios from 'axios';
+import {RESULTS} from 'react-native-permissions';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 // import { request, PERMISSIONS, RESULTS } from 'react-native-permissions';
 
-console.log("Scanning started...");
+console.log('Scanning started...');
 
 const DEVICE_LIST_LIMIT = 50;
 
@@ -24,12 +24,12 @@ const useDevices = () => {
   const activeSubscriptions = new Map();
   const connectionInProgress = {};
 
-  const { start, stop, observe } = useMemo(() => scanner(), []);
+  const {start, stop, observe} = useMemo(() => scanner(), []);
 
   function hexToBase64(hexString) {
     // Convert hex string to bytes and encode as base64
-    const bytes = Buffer.from(hexString, "hex");
-    return bytes.toString("base64");
+    const bytes = Buffer.from(hexString, 'hex');
+    return bytes.toString('base64');
   }
 
   // const requestLocationPermission = async () => {
@@ -71,33 +71,33 @@ const useDevices = () => {
   const getCurrentLocation = async () => {
     return new Promise((resolve, reject) => {
       Geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude, accuracy } = position.coords;
+        position => {
+          const {latitude, longitude, accuracy} = position.coords;
           // console.log({ latitude, longitude, accuracy });
-          resolve({ latitude, longitude, accuracy });
+          resolve({latitude, longitude, accuracy});
         },
-        (error) => reject(error),
-        { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+        error => reject(error),
+        {enableHighAccuracy: true, timeout: 15000, maximumAge: 10000},
       );
     });
   };
 
   async function sendDataToDozzel(
     deviceWithCharacteristic,
-    LOGGING_API_ENDPOINT
+    LOGGING_API_ENDPOINT,
   ) {
     try {
       // Example static values for orgId, metaType, and metaVersion
-      const orgID = "xc37";
-      const metaType = "2";
-      const metaVersion = "1.1.12.0";
+      const orgID = 'xc37';
+      const metaType = '2';
+      const metaVersion = '1.1.12.0';
 
       // Simulated GPS coordinates, replace with actual location if available
       // const location = await getCurrentLocation();
       const latitudeMicro =
-        Platform.OS === "ios" ? deviceWithCharacteristic?.latitude : ""; // Example: latitude in microdegrees
+        Platform.OS === 'ios' ? deviceWithCharacteristic?.latitude : ''; // Example: latitude in microdegrees
       const longitudeMicro =
-        Platform.OS === "ios" ? deviceWithCharacteristic?.longitude : ""; // Example: longitude in microdegrees
+        Platform.OS === 'ios' ? deviceWithCharacteristic?.longitude : ''; // Example: longitude in microdegrees
       const timestamp = deviceWithCharacteristic.timestamp; // Current time in seconds
       // console.log(deviceWithCharacteristic);
       const payloadDictionary = {
@@ -114,7 +114,7 @@ const useDevices = () => {
           {
             // bleManufacturerData: hexToBase64(deviceWithCharacteristic.manufacturedata || ""),
             bleManufacturerData:
-              deviceWithCharacteristic?.manufacturerData || "",
+              deviceWithCharacteristic?.manufacturerData || '',
             receiveTime: {
               seconds: Math.floor(Date.now() / 1000),
             },
@@ -134,19 +134,19 @@ const useDevices = () => {
       // Sending logs to the logging API endpoint if ENABLE_LOGGING is true
       // console.log(JSON.stringify(payloadDictionary));
       const chorusResponse = await axios.post(
-        "https://api-dev.chorussystems.net/v1alpha1/payloads",
-        payloadDictionary
+        'https://api-dev.chorussystems.net/v1alpha1/payloads',
+        payloadDictionary,
       );
 
       if (ENABLE_LOGGING) {
-        const body = { requestPayload: payloadDictionary };
-        body["responsePayload"] = chorusResponse?.config.data;
+        const body = {requestPayload: payloadDictionary};
+        body['responsePayload'] = chorusResponse?.config.data;
 
         const logResponse = await axios.post(LOGGING_API_ENDPOINT, body);
         // console.log("Logs sent successfully to Dozzle:", logResponse.data);
       }
     } catch (error) {
-      console.error("Error sending data to Dozzel:", error.message);
+      console.error('Error sending data to Dozzel:', error.message);
     }
   }
 
@@ -159,8 +159,8 @@ const useDevices = () => {
         } else {
           sendDataToDozzel(
             deviceWithCharacteristic,
-            "http://34.66.72.114:8000/ble/log",
-            (ENABLE_LOGGING = true)
+            'http://34.66.72.114:8000/ble/log',
+            (ENABLE_LOGGING = true),
           );
           count++;
         }
@@ -168,7 +168,7 @@ const useDevices = () => {
     }, 170000);
   }
 
-  const monitorConnection = async (device) => {
+  const monitorConnection = async device => {
     device.onDisconnected(() => {
       // console.log(
       //   `Device ${device.id} disconnected. Attempting reconnection...`
@@ -190,7 +190,7 @@ const useDevices = () => {
     activeSubscriptions.set(key, subscription); // Add new subscription
   };
   const clearSubscriptions = () => {
-    activeSubscriptions.forEach((subscription) => subscription.remove());
+    activeSubscriptions.forEach(subscription => subscription.remove());
     activeSubscriptions.clear();
   };
 
@@ -199,7 +199,7 @@ const useDevices = () => {
     device,
     serviceUUID,
     characteristicUUID,
-    retries = 3
+    retries = 3,
   ) => {
     for (let attempt = 1; attempt <= retries; attempt++) {
       try {
@@ -217,32 +217,32 @@ const useDevices = () => {
             if (characteristic?.value) {
               const decodedValue = Buffer.from(
                 characteristic.value,
-                "base64"
-              ).toString("utf-8");
+                'base64',
+              ).toString('utf-8');
               // console.log(
               //   `Notification received for ${characteristicUUID}:`,
               //   decodedValue
               // );
             }
-          }
+          },
         );
         // console.log(`Successfully subscribed to ${characteristicUUID}`);
         return subscription;
       } catch (error) {
         console.warn(
           `Attempt ${attempt}: Failed to subscribe to ${characteristicUUID}:`,
-          error
+          error,
         );
         if (attempt === retries) throw error; // Fail after max retries
-        await new Promise((resolve) => setTimeout(resolve, 1000 * attempt)); // Exponential backoff
+        await new Promise(resolve => setTimeout(resolve, 1000 * attempt)); // Exponential backoff
       }
     }
   };
 
   function processBase64ManufacturerData(manufacturerData) {
     // Decode Base64 string into a Uint8Array
-    const decodedBytes = Uint8Array.from(atob(manufacturerData), (char) =>
-      char.charCodeAt(0)
+    const decodedBytes = Uint8Array.from(atob(manufacturerData), char =>
+      char.charCodeAt(0),
     );
 
     // Extract the last 6 bytes for the MAC address
@@ -250,18 +250,18 @@ const useDevices = () => {
 
     // Convert the MAC address bytes to a string
     const macAddressString = Array.from(macAddressData)
-      .map((byte) => byte.toString(16).padStart(2, "0").toUpperCase())
-      .join(":");
+      .map(byte => byte.toString(16).padStart(2, '0').toUpperCase())
+      .join(':');
 
     // Convert the entire manufacturer data to a hex string
     const payloadString = Array.from(decodedBytes)
-      .map((byte) => byte.toString(16).padStart(2, "0").toUpperCase())
-      .join("");
+      .map(byte => byte.toString(16).padStart(2, '0').toUpperCase())
+      .join('');
 
-    return { macAddressString, payloadString };
+    return {macAddressString, payloadString};
   }
   // Update device characteristics
-  const updateCharacteristics = async (device) => {
+  const updateCharacteristics = async device => {
     if (updatingCharacteristics.has(device.id)) {
       // console.log(
       //   `Characteristics update already in progress for ${device.id}`
@@ -276,12 +276,12 @@ const useDevices = () => {
       // Discover services and characteristics
       await device.discoverAllServicesAndCharacteristics();
       const services = await device.services();
-      const location = Platform.OS === "ios" ?? (await getCurrentLocation());
+      const location = Platform.OS === 'ios' ?? (await getCurrentLocation());
 
       for (const service of services) {
         try {
           const characteristics = await device.characteristicsForService(
-            service.uuid
+            service.uuid,
           );
 
           for (const characteristic of characteristics) {
@@ -289,7 +289,7 @@ const useDevices = () => {
               const subscription = await subscribeToCharacteristic(
                 device,
                 service.uuid,
-                characteristic.uuid
+                characteristic.uuid,
               );
               manageSubscription(device.id, characteristic.uuid, subscription);
             }
@@ -302,22 +302,22 @@ const useDevices = () => {
               //   )
               // : null;
               // const location = await getCurrentLocation();
-              setDevices((prevDevices) => {
+              setDevices(prevDevices => {
                 const deviceIndex = prevDevices.findIndex(
-                  (d) => d.id === device.id
+                  d => d.id === device.id,
                 );
 
                 const deviceWithCharacteristic = {
                   ...device,
-                  latitude: Platform.OS === "ios" ? location?.latitude : "",
-                  longitude: Platform.OS === "ios" ? location?.longitude : "",
+                  latitude: Platform.OS === 'ios' ? location?.latitude : '',
+                  longitude: Platform.OS === 'ios' ? location?.longitude : '',
                   characteristicValue: decodedValue,
                   macAddressString: processBase64ManufacturerData(
-                    device.manufacturerData
+                    device.manufacturerData,
                   ).macAddressString,
                 };
 
-                if (Platform.OS === "ios") {
+                if (Platform.OS === 'ios') {
                   // Send Data to Dozzle with TimeIntarvals
                   startSendingData(deviceWithCharacteristic);
                 }
@@ -344,7 +344,7 @@ const useDevices = () => {
     } catch (err) {
       console.error(
         `Error updating characteristics for device ${device.id}:`,
-        err.message
+        err.message,
       );
     } finally {
       updatingCharacteristics.delete(device.id); // Mark as finished updating
@@ -353,19 +353,19 @@ const useDevices = () => {
 
   // App state listener for managing foreground/background transitions
   useEffect(() => {
-    const handleAppStateChange = (nextAppState) => {
-      if (nextAppState === "background") {
+    const handleAppStateChange = nextAppState => {
+      if (nextAppState === 'background') {
         console.log(
-          "App moved to background. Adjust BLE operations if needed."
+          'App moved to background. Adjust BLE operations if needed.',
         );
-      } else if (nextAppState === "active") {
-        console.log("App moved to foreground. Resume BLE operations.");
+      } else if (nextAppState === 'active') {
+        console.log('App moved to foreground. Resume BLE operations.');
       }
     };
 
     const subscription = AppState.addEventListener(
-      "change",
-      handleAppStateChange
+      'change',
+      handleAppStateChange,
     );
     return () => {
       subscription.remove();
@@ -377,7 +377,7 @@ const useDevices = () => {
     let hours = date.getHours();
     const minutes = date.getMinutes();
     const seconds = date.getSeconds();
-    const ampm = hours >= 12 ? "PM" : "AM";
+    const ampm = hours >= 12 ? 'PM' : 'AM';
     hours = hours % 12;
     hours = hours ? hours : 12; // the hour '0' should be '12'
     const month = date.getMonth() + 1;
@@ -385,21 +385,21 @@ const useDevices = () => {
     const year = date.getFullYear();
 
     const formattedDate = [
-      month.toString().padStart(2, "0"),
-      day.toString().padStart(2, "0"),
+      month.toString().padStart(2, '0'),
+      day.toString().padStart(2, '0'),
       year,
-    ].join("-");
+    ].join('-');
 
     const formattedTime = [
-      hours.toString().padStart(2, "0"),
-      minutes.toString().padStart(2, "0"),
-      seconds.toString().padStart(2, "0"),
-    ].join(":");
+      hours.toString().padStart(2, '0'),
+      minutes.toString().padStart(2, '0'),
+      seconds.toString().padStart(2, '0'),
+    ].join(':');
 
     return `${formattedDate} ${formattedTime} ${ampm}`;
   }
-  const logAssetData = async (deviceWithLocation) => {
-    const token = await AsyncStorage.getItem("token");
+  const logAssetData = async deviceWithLocation => {
+    const token = await AsyncStorage.getItem('token');
     console.log(token);
     console.log({
       assetID: deviceWithLocation?.macAddressString,
@@ -408,23 +408,23 @@ const useDevices = () => {
     });
     axios
       .post(
-        `http://35.223.244.137:8000/v1/assets/bluetooth/log`,
+        `https://api.matorg.com/v1/assets/bluetooth/log`,
         {
           assetID: deviceWithLocation?.macAddressString,
           RSSI: deviceWithLocation?.rssi,
           timestamp: new Date().toISOString(),
         },
-        { headers: { Authorization: `Bearer ${token}` } }
+        {headers: {Authorization: `Bearer ${token}`}},
       )
-      .catch((err) => console.log(err));
+      .catch(err => console.log(err));
   };
   // Initialize BLE scanning
   useEffect(() => {
     // requestLocationPermission();
     observe({
-      onStarted: (startedState) => setStarted(startedState),
-      onStateChanged: (changedBleState) => setBleState(changedBleState),
-      onDeviceDetected: async (device) => {
+      onStarted: startedState => setStarted(startedState),
+      onStateChanged: changedBleState => setBleState(changedBleState),
+      onDeviceDetected: async device => {
         // console.log(device, "device");
         // if (Platform.OS === "ios") {
         //   try {
@@ -455,15 +455,15 @@ const useDevices = () => {
         //   }
         // } else {
         const location =
-          Platform.OS === "ios" ? await getCurrentLocation() : {};
-        setDevices((prevDevices) => {
-          const deviceIndex = prevDevices.findIndex((d) => d.id === device.id);
+          Platform.OS === 'ios' ? await getCurrentLocation() : {};
+        setDevices(prevDevices => {
+          const deviceIndex = prevDevices.findIndex(d => d.id === device.id);
           let deviceWithLocation = {
             ...device,
-            latitude: Platform.OS === "ios" ? location?.latitude : "",
-            longitude: Platform.OS === "ios" ? location?.longitude : "",
+            latitude: Platform.OS === 'ios' ? location?.latitude : '',
+            longitude: Platform.OS === 'ios' ? location?.longitude : '',
             macAddressString: processBase64ManufacturerData(
-              device.manufacturerData
+              device.manufacturerData,
             ).macAddressString,
           };
 
@@ -471,7 +471,7 @@ const useDevices = () => {
           if (deviceIndex >= 0) {
             // Update existing device
             const updatedDevices = [...prevDevices];
-            updatedDevices[deviceIndex] = { ...deviceWithLocation };
+            updatedDevices[deviceIndex] = {...deviceWithLocation};
             return updatedDevices;
           } else {
             // Add new device
@@ -483,7 +483,7 @@ const useDevices = () => {
         });
         // }
       },
-      onError: (err) => setError(err.toString()),
+      onError: err => setError(err.toString()),
     });
 
     start();
@@ -493,7 +493,7 @@ const useDevices = () => {
       stop();
     };
   }, [observe, start, stop]);
-  return { devices, bleState, started, error };
+  return {devices, bleState, started, error};
 };
 
 export default useDevices;
